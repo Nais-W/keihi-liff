@@ -32,7 +32,10 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
 
 /* カレンダー */
 .cal{flex:1 1 auto;overflow-y:auto;padding:6px 7px 4px;touch-action:pan-y}
-.wk{display:grid;grid-template-columns:repeat(7,1fr)}
+.stage{flex:1 1 auto;overflow:hidden;position:relative;touch-action:pan-y}
+.track{display:flex;width:300%;height:100%;will-change:transform}
+.page{width:33.3333%;flex:0 0 33.3333%;padding:6px 7px 4px;overflow-y:auto}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);padding:0 7px}
 .wk div{text-align:center;font-size:11px;color:var(--sub);padding:3px 0}
 .wk div:first-child{color:var(--sun)} .wk div:last-child{color:var(--sat)}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
@@ -103,6 +106,12 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
 .card.done .ok{background:#d8f2e2;color:#04913f}
 .thumb{width:56px;height:56px;object-fit:cover;border-radius:9px;border:1px solid var(--line);flex:0 0 auto}
 .prog{font-size:13px;color:var(--sub);text-align:center;padding:10px 0}
+.shots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.shot{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.shot .rm{position:absolute;top:3px;right:3px;width:26px;height:26px;border:none;border-radius:50%;
+          background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;padding:0}
+.shot .rm svg.i{width:15px;height:15px;stroke-width:2.4}
 .stick{position:sticky;bottom:0;background:#fff;padding-top:10px;
        box-shadow:0 -8px 12px -8px rgba(0,0,0,.12)}
 
@@ -148,7 +157,8 @@ select{width:100%;padding:12px;font-size:17px;border:1px solid var(--line);borde
 <body>
 
 <div id="root"><div class="center"><div class="spin"></div>読み込んでいます…</div></div>
-<input type="file" id="file" accept="image/*" capture="environment" multiple class="hide" onchange="onPick(event)">
+<input type="file" id="cam" accept="image/*" capture="environment" class="hide" onchange="onShot(event)">
+<input type="file" id="lib" accept="image/*" multiple class="hide" onchange="onLib(event)">
 
 <div class="mask" id="mask" onclick="closeSheet()"></div>
 <div class="sheet" id="sheet">
@@ -170,7 +180,8 @@ var S = {
   view:'',                 // 表示中の期間
   cache:{},                // 期間 → 明細
   day:'', draft:null,
-  queue:[]                 // 撮影して確認待ちの明細
+  queue:[],                // 撮影して確認待ちの明細
+  shots:[]                 // 撮影済みでまだ読み取っていない画像
 };
 
 /* ---------- アイコン（iOS風の線画・自前SVG） ---------- */
@@ -184,7 +195,7 @@ var IC = {
   check:'<path d="M5 12.5 10 17.5 19 7"/>',
   left:'<path d="M14.5 5 8 12l6.5 7"/>',
   right:'<path d="M9.5 5 16 12l-6.5 7"/>',
-  gear:'<circle cx="12" cy="12" r="3.2"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M18 6l-1.4 1.4M7.4 16.6 6 18"/>',
+  gear:'<circle cx="12" cy="12" r="2.9"/><path d="M19.1 13.6a7.6 7.6 0 0 0 0-3.2l1.8-1.3-1.8-3.1-2.1.8a7.6 7.6 0 0 0-2.8-1.6L13.9 3h-3.8l-.3 2.2a7.6 7.6 0 0 0-2.8 1.6l-2.1-.8-1.8 3.1 1.8 1.3a7.6 7.6 0 0 0 0 3.2l-1.8 1.3 1.8 3.1 2.1-.8a7.6 7.6 0 0 0 2.8 1.6l.3 2.2h3.8l.3-2.2a7.6 7.6 0 0 0 2.8-1.6l2.1.8 1.8-3.1z"/>',
   close:'<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
   plus:'<path d="M12 5.5v13M5.5 12h13"/>',
   trash:'<path d="M4.5 6.5h15M9.5 6.5V4.8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1.7M6.5 6.5l.9 12a1 1 0 0 0 1 .9h7.2a1 1 0 0 0 1-.9l.9-12"/>'
@@ -235,29 +246,20 @@ function datesOf(p){
 function renderCal(){
   var isCur = (S.view===S.period);
   var h = '<div class="hd">'+
-    '<button class="nav" onclick="goPeriod(-1)">'+ico('left')+'</button>'+
+    '<div style="min-width:44px"></div>'+
     '<div class="ttl"><b>'+esc(periodLabelOf(S.view))+'</b>'+
     '<span>'+esc(S.emp.name)+' さん'+(isCur?'':'　（締め切り済み）')+'</span></div>'+
-    '<button class="nav" onclick="goPeriod(1)" '+(isCur?'disabled':'')+'>'+ico('right')+'</button>'+
     '<button class="nav" onclick="openSettings()">'+ico('gear')+'</button>'+
   '</div>';
 
-  h += '<div class="cal" id="cal"><div class="wk">'+
+  h += '<div class="wk">'+
        '<div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>'+
-       '</div><div class="grid">';
-  var ds = datesOf(S.view);
-  for (var b=0;b<dow(ds[0]);b++) h += '<div class="cell blank"></div>';
-  ds.forEach(function(d){
-    var t = sumOf(itemsOf(d)), cls='cell';
-    if (dow(d)===0) cls+=' sun';
-    if (dow(d)===6) cls+=' sat';
-    if (d===S.today) cls+=' today';
-    if (d > S.today) cls+=' future';
-    h += '<button class="'+cls+'" onclick="openDay(\'' + d + '\')">'+
-         '<span class="d">'+Number(d.split('-')[2])+'</span>'+
-         (t?'<span class="amt">'+yen(t)+'</span>':'')+'</button>';
-  });
-  h += '</div></div>';
+       '</div>';
+
+  // 前月・当月・翌月を横に並べた1枚の帯。指の動きに合わせて動かす。
+  h += '<div class="stage" id="stage"><div class="track" id="track">'+
+       gridHtml(shiftPeriod(S.view,-1)) + gridHtml(S.view) + gridHtml(shiftPeriod(S.view,1)) +
+       '</div></div>';
 
   h += '<div class="foot"><div class="tot"><span class="lbl">この期間の合計</span>'+
        '<span><span class="v">'+yen(sumOf(S.items))+'</span>円'+
@@ -269,23 +271,83 @@ function renderCal(){
   bindSwipe();
 }
 
+/* 1か月分のグリッドを組み立てる */
+function gridHtml(p){
+  var list = S.cache[p] || (p===S.view ? S.items : null);
+  var h = '<div class="page"><div class="grid">';
+  var ds = datesOf(p);
+  for (var b=0;b<dow(ds[0]);b++) h += '<div class="cell blank"></div>';
+  ds.forEach(function(d){
+    var t = list ? sumOf(list.filter(function(x){return x.date===d;})) : 0;
+    var cls='cell';
+    if (dow(d)===0) cls+=' sun';
+    if (dow(d)===6) cls+=' sat';
+    if (d===S.today) cls+=' today';
+    if (d > S.today) cls+=' future';
+    h += '<button class="'+cls+'" onclick="openDay(\'' + d + '\')">'+
+         '<span class="d">'+Number(d.split('-')[2])+'</span>'+
+         (t?'<span class="amt">'+yen(t)+'</span>':'')+'</button>';
+  });
+  return h + '</div></div>';
+}
+
 /* 左右スワイプで期間を移動 */
 function bindSwipe(){
-  var el = document.getElementById('cal'); if(!el) return;
-  var x0=0,y0=0,t0=0;
-  el.addEventListener('touchstart',function(e){
-    x0=e.touches[0].clientX; y0=e.touches[0].clientY; t0=Date.now(); },{passive:true});
-  el.addEventListener('touchend',function(e){
-    var dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0;
-    if (Date.now()-t0>600) return;
-    if (Math.abs(dx)<55 || Math.abs(dx)<Math.abs(dy)*1.6) return;
-    goPeriod(dx<0 ? 1 : -1);
+  var stage=document.getElementById('stage'), track=document.getElementById('track');
+  if(!stage||!track) return;
+  var w=stage.clientWidth, x0=0,y0=0,dx=0,dragging=false,decided=false;
+
+  function setX(px,anim){
+    track.style.transition = anim ? 'transform .22s ease-out' : 'none';
+    track.style.transform  = 'translateX(' + (-w + px) + 'px)';
+  }
+  setX(0,false);
+
+  stage.addEventListener('touchstart',function(e){
+    if(e.touches.length!==1) return;
+    w=stage.clientWidth; x0=e.touches[0].clientX; y0=e.touches[0].clientY;
+    dx=0; dragging=true; decided=false; setX(0,false);
+  },{passive:true});
+
+  stage.addEventListener('touchmove',function(e){
+    if(!dragging) return;
+    var mx=e.touches[0].clientX-x0, my=e.touches[0].clientY-y0;
+    if(!decided){
+      if(Math.abs(mx)<6 && Math.abs(my)<6) return;
+      decided=true;
+      if(Math.abs(my)>Math.abs(mx)){ dragging=false; return; }   // 縦スクロール優先
+    }
+    if(e.cancelable) e.preventDefault();
+    // 未来側へは引っ張れないよう抵抗をかける
+    if(mx<0 && shiftPeriod(S.view,1) > S.period) mx = mx/4;
+    dx=mx; setX(dx,false);
+  },{passive:false});
+
+  stage.addEventListener('touchend',function(){
+    if(!dragging){ return; }
+    dragging=false;
+    var go = Math.abs(dx) > w*0.22 ? (dx<0 ? 1 : -1) : 0;
+    if(go===1 && shiftPeriod(S.view,1) > S.period) go=0;
+    if(go===0){ setX(0,true); return; }
+    setX(go===1 ? -w : w, true);
+    setTimeout(function(){ goPeriod(go); }, 200);
   },{passive:true});
 }
 function goPeriod(n){
   var next = shiftPeriod(S.view, n);
   if (next > S.period) return;                 // 未来の期間は見せない
-  loadPeriod(next).then(renderCal);
+  loadPeriod(next).then(function(){
+    renderCal();
+    prefetch(shiftPeriod(next,-1));
+    prefetch(shiftPeriod(next,1));
+  });
+}
+/* 隣の期間を先読みしておく（スワイプ時に金額が空にならないように） */
+function prefetch(p){
+  if (p > S.period || S.cache[p]) return;
+  api('apiGetMyList',{idToken:S.idToken, period:p}).then(function(r){
+    if(r.ok){ S.cache[p]=r.items||[]; if(document.getElementById('track')) renderCal(); }
+  });
 }
 function loadPeriod(p){
   S.view = p;
@@ -351,48 +413,93 @@ function chooseType(){
 /* =========================================================
    撮影 → 一括確認
    ========================================================= */
-function shoot(){ document.getElementById('file').click(); }
+function shoot(){ S.shots=[]; showShots(); openSheet(); }
 
-function onPick(ev){
-  var files = Array.prototype.slice.call(ev.target.files||[]);
-  ev.target.value='';
-  if(!files.length) return;
-  if(files.length > MAX_PHOTOS) files = files.slice(0, MAX_PHOTOS);
+/** 撮影待ち画面：撮るたびにサムネイルが増えていく */
+function showShots(){
+  var n=S.shots.length;
+  var bar='<h3>領収書を撮る</h3>'+(n?'<span class="rt">'+n+'枚</span>':'')+closeBtn();
+  var b='';
+  if(n){
+    b+='<div class="shots">';
+    S.shots.forEach(function(s,i){
+      b+='<div class="shot"><img src="data:image/jpeg;base64,'+s+'">'+
+         '<button class="rm" onclick="rmShot('+i+')">'+ico('close')+'</button></div>';
+    });
+    b+='</div>';
+  } else {
+    b+='<div class="empty">下のボタンから撮影してください。<br>1枚に複数のレシートが写っていても読み取れます。</div>';
+  }
+  b+='<div class="stick">'+
+     '<button class="big" style="justify-content:center;border-color:var(--green);color:var(--green);font-weight:700;margin-bottom:8px"'+
+       ' onclick="document.getElementById(\'cam\').click()">'+ico('camera')+
+       (n?'　もう1枚撮る':'　カメラで撮る')+'</button>'+
+     '<button class="big" style="justify-content:center;margin-bottom:8px"'+
+       ' onclick="document.getElementById(\'lib\').click()">'+ico('doc')+'　写真から選ぶ（複数可）</button>'+
+     '<button class="save" style="margin-top:0" onclick="readShots()" '+(n?'':'disabled')+'>'+
+       (n? n+'枚を読み取る' : '読み取る')+'</button></div>';
+  setSheet(bar,b);
+}
+function rmShot(i){ S.shots.splice(i,1); showShots(); }
 
+function onShot(ev){
+  var f=ev.target.files&&ev.target.files[0]; ev.target.value='';
+  if(!f) return;
+  toJpegBase64(f).then(function(b64){
+    if(S.shots.length<MAX_PHOTOS) S.shots.push(b64);
+    showShots();
+  }).catch(function(e){
+    alert('画像を処理できませんでした：'+(e&&e.message?e.message:e));
+  });
+}
+function onLib(ev){
+  var fs=Array.prototype.slice.call(ev.target.files||[]); ev.target.value='';
+  if(!fs.length) return;
+  var i=0;
+  (function next(){
+    if(i>=fs.length || S.shots.length>=MAX_PHOTOS){ showShots(); return; }
+    toJpegBase64(fs[i]).then(function(b64){ S.shots.push(b64); })
+      .catch(function(){}).then(function(){ i++; next(); });
+  })();
+}
+
+/** 溜めた写真をまとめてAIに送る */
+function readShots(){
+  var shots=S.shots.slice(); if(!shots.length) return;
   S.queue=[];
   setSheet('<h3>読み取り中</h3>'+closeBtn(),
-    '<div class="center"><div class="spin"></div><span id="prog">1 / '+files.length+' 枚目を読み取っています…</span></div>');
-  openSheet();
+    '<div class="center"><div class="spin"></div><span id="prog">1 / '+shots.length+
+    ' 枚目を読み取っています…</span><p class="note">1枚あたり10〜20秒かかります</p></div>');
 
   var i=0;
-  function next(){
-    if(i>=files.length){ showQueue(); return; }
+  (function next(){
+    if(i>=shots.length){ S.shots=[]; showQueue(); return; }
     var el=document.getElementById('prog');
-    if(el) el.textContent = (i+1)+' / '+files.length+' 枚目を読み取っています…';
-    toJpegBase64(files[i]).then(function(b64){
-      return api('apiReadReceipt',{idToken:S.idToken, imageBase64:b64}).then(function(r){
-        var rc = (r && r.ok && r.receipts && r.receipts.length) ? r.receipts : [null];
-        rc.forEach(function(a){
-          S.queue.push({
-            date: (a && a.date && a.date<=S.today) ? a.date : (S.day||S.today),
-            clinic: S.defClinic || (S.emp.clinic||''),
-            category: (a && a.kind) ? a.kind : 'その他',
-            amount: (a && a.amount) ? a.amount : '',
-            aiAmount: (a && a.amount) ? a.amount : '',
-            memo: (a && a.store) ? a.store : '',
-            image: b64, km:'', from:'', to:'', trip:'', ok:false
-          });
+    if(el) el.textContent=(i+1)+' / '+shots.length+' 枚目を読み取っています…';
+    var b64=shots[i];
+    api('apiReadReceipt',{idToken:S.idToken, imageBase64:b64}).then(function(r){
+      var rc=(r&&r.ok&&r.receipts&&r.receipts.length)?r.receipts:[null];
+      rc.forEach(function(a){
+        S.queue.push({
+          date:(a&&a.date&&a.date<=S.today)?a.date:(S.day||S.today),
+          clinic:S.defClinic||(S.emp.clinic||''),
+          category:(a&&a.kind)?a.kind:'その他',
+          amount:(a&&a.amount)?a.amount:'',
+          aiAmount:(a&&a.amount)?a.amount:'',
+          memo:(a&&a.store)?a.store:'',
+          image:b64, km:'', from:'', to:'', trip:'', ok:false,
+          err:(!a && r && r.note)?r.note:''
         });
       });
     }).catch(function(e){
       S.queue.push({ date:S.day||S.today, clinic:S.defClinic||(S.emp.clinic||''),
-        category:'その他', amount:'', aiAmount:'', memo:'', image:'',
+        category:'その他', amount:'', aiAmount:'', memo:'', image:b64,
         km:'', from:'', to:'', trip:'', ok:false,
-        err:(e&&e.message?e.message:'読み取り失敗') });
+        err:'通信に失敗しました' });
     }).then(function(){ i++; next(); });
-  }
-  next();
+  })();
 }
+
 
 function showQueue(){
   var bar='<h3>内容の確認</h3><span class="rt">'+S.queue.length+'件</span>'+closeBtn();
