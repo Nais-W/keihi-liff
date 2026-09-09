@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>経費申請</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+:root{
+  --green:#06C755; --ink:#1e2225; --sub:#5a656d; --line:#dfe3e6;
+  --bg:#ffffff; --soft:#f5f6f8; --red:#d93025;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+     color:var(--ink);background:var(--bg);font-size:16px;line-height:1.6}
+.wrap{padding:12px 14px 40px}
+
+/* ヘッダー */
+.hd{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:8px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:10}
+.back{min-height:44px;min-width:72px;padding:8px 14px;border:1px solid var(--line);border-radius:10px;
+      background:#fff;font-size:16px;color:var(--ink)}
+.back:disabled{opacity:.3}
+.who{font-size:15px;color:var(--sub);text-align:right;line-height:1.3}
+.who b{display:block;font-size:17px;color:var(--ink)}
+
+h2{font-size:21px;margin:14px 0 4px}
+.lead{color:var(--sub);font-size:15px;margin:0 0 14px}
+
+/* ボタン群 */
+.grid{display:grid;gap:8px}
+.g1{grid-template-columns:1fr}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.btn{min-height:56px;padding:12px 8px;border:1px solid var(--line);border-radius:12px;background:#fff;
+     font-size:17px;color:var(--ink);display:flex;align-items:center;justify-content:center;text-align:center}
+.btn:active{background:var(--soft)}
+.btn.sel{border-color:var(--green);background:#eafaf1;font-weight:700}
+.btn:disabled{color:#c3c9cd;background:var(--soft)}
+.btn.sm{min-height:48px;font-size:16px}
+.big{min-height:60px;font-size:19px;font-weight:700}
+.primary{background:var(--green);border-color:var(--green);color:#fff;font-weight:700;min-height:58px;font-size:18px}
+.primary:disabled{background:#b8e6c9;border-color:#b8e6c9;color:#fff}
+.ghost{background:#fff;color:var(--sub)}
+.danger{color:var(--red);border-color:#f0c3bf}
+
+/* 入力 */
+input[type=text],input[type=number],textarea{
+  width:100%;padding:14px;font-size:18px;border:1px solid var(--line);border-radius:12px;
+  font-family:inherit;color:var(--ink);background:#fff}
+textarea{min-height:96px;resize:vertical}
+label.fl{display:block;font-size:15px;color:var(--sub);margin:14px 0 6px}
+
+/* 情報バー・確認表 */
+.bar{background:var(--soft);border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:16px}
+.bar .v{font-weight:700;font-size:20px}
+.rows{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:6px 0 16px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:14px;border-bottom:1px solid var(--line);
+     background:#fff;min-height:54px;align-items:center}
+.row:last-child{border-bottom:none}
+.row .k{color:var(--sub);font-size:15px;flex:0 0 34%}
+.row .v{text-align:right;flex:1;word-break:break-all}
+.row.tap:active{background:var(--soft)}
+.row .arrow{color:#c3c9cd;flex:0 0 auto}
+.amt{font-size:26px;font-weight:700}
+
+.msg{font-size:15px;margin:10px 0;min-height:1.2em}
+.msg.err{color:var(--red)}
+.msg.ok{color:var(--green)}
+.note{font-size:14px;color:var(--sub);margin:8px 0}
+
+.center{text-align:center;padding:48px 20px;color:var(--sub)}
+.spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--green);
+      border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 14px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.prev{width:100%;border-radius:12px;border:1px solid var(--line);margin:8px 0;display:block}
+.hide{display:none}
+.sec{margin-top:22px}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <button class="back" id="backBtn" onclick="goBack()">戻る</button>
+  <div class="who" id="who"></div>
+</div>
+
+<div class="wrap" id="app">
+  <div class="center"><div class="spin"></div>読み込んでいます…</div>
+</div>
+
+<script>
+/* =========================================================
+   設定：この2つを自分の環境の値に書き換える
+   ========================================================= */
+var LIFF_ID     = '2011524519-lSwDjFOP';
+var GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwYguEyJP2VaZ3xixjiCUIHy2a_qAW_umaaQ4UAGgsT9N0jLo7gajy-y2s4qV7d0zBz/exec';
+
+/* ========================================================= */
+
+var S = {                 // 状態
+  idToken:'', emp:null, cfg:null, period:'', periodLabel:'', dates:[], today:'',
+  mode:'',                // 'gas' | 'receipt'
+  date:'', clinic:'', trip:'', from:'', to:'', km:'',
+  category:'', amount:'', memo:'', imageB64:'', aiAmount:'', aiStore:''
+};
+var nav = [];             // 履歴 [{name, opt}]
+var cur = null;
+
+/* ---------- 通信 ---------- */
+function api(fn, args){
+  return fetch(GAS_API_URL,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({fn:fn, args:args||{}})
+  }).then(function(r){ return r.json(); });
+}
+
+/* ---------- 画面遷移 ---------- */
+function go(name, opt){
+  if(cur) nav.push(cur);
+  render(name, opt);
+}
+function replace(name, opt){ render(name, opt); }
+function goBack(){
+  if(!nav.length) return;
+  var p = nav.pop();
+  render(p.name, p.opt, true);
+}
+function render(name, opt, isBack){
+  cur = {name:name, opt:opt};
+  document.getElementById('backBtn').disabled = (nav.length===0);
+  var el = document.getElementById('app');
+  el.innerHTML = (SCREENS[name] || function(){return '<p>画面がありません</p>';})(opt);
+  window.scrollTo(0,0);
+  if(AFTER[name]) AFTER[name](opt);
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function yen(n){ return Number(n||0).toLocaleString('ja-JP'); }
+function mdLabel(iso){ var p=iso.split('-'); return Number(p[1])+'/'+Number(p[2]); }
+function wd(iso){ var d=new Date(iso+'T00:00:00+09:00'); return '日月火水木金土'[d.getDay()]; }
+function setWho(){
+  document.getElementById('who').innerHTML = S.emp
+    ? '<b>'+esc(S.emp.name)+'</b>'+esc(S.periodLabel)+' 分'
+    : '';
+}
+
+/* =========================================================
+   画面定義
+   ========================================================= */
+var SCREENS = {}, AFTER = {};
+
+/* --- 初回連携 --- */
+SCREENS.link = function(){
+  return '<h2>はじめに</h2>'+
+  '<p class="lead">最初の1回だけ、ご自身の従業員IDを入力してください。次回からは不要です。</p>'+
+  '<label class="fl">従業員ID</label>'+
+  '<input type="text" id="empId" inputmode="numeric" autocomplete="off" placeholder="例：510235">'+
+  '<div class="msg err" id="linkMsg" aria-live="polite"></div>'+
+  '<button class="btn primary" onclick="doLink()">確認する</button>';
+};
+function doLink(){
+  var v = document.getElementById('empId').value.trim();
+  var m = document.getElementById('linkMsg');
+  if(!v){ m.textContent='従業員IDを入力してください。'; return; }
+  m.className='msg'; m.textContent='確認しています…';
+  api('apiLink',{idToken:S.idToken, employeeId:v}).then(function(r){
+    if(!r.ok){ m.className='msg err'; m.textContent=r.error; return; }
+    S.emp = r.employee;
+    if(!S.clinic) S.clinic = r.employee.clinic || '';
+    setWho();
+    nav = [];
+    replace('menu');
+  }).catch(function(){ m.className='msg err'; m.textContent='通信に失敗しました。電波の良い場所でお試しください。'; });
+}
+
+/* --- メニュー --- */
+SCREENS.menu = function(){
+  return '<h2>何を申請しますか</h2>'+
+  '<p class="lead">'+esc(S.periodLabel)+' 分として登録されます</p>'+
+  '<div class="grid g1">'+
+    '<button class="btn big" onclick="startGas()">ガソリン代（走行距離から計算）</button>'+
+    '<button class="btn big" onclick="startReceipt(\'高速代\')">高速代</button>'+
+    '<button class="btn big" onclick="startReceipt(\'駐車場代\')">駐車場代</button>'+
+    '<button class="btn big" onclick="startReceipt(\'\')">その他の経費</button>'+
+  '</div>'+
+  '<p class="note sec">高速代・駐車場代・その他は領収書の写真が必要です。ガソリン代は写真不要です。</p>';
+};
+function startGas(){
+  S.mode='gas'; S.category='ガソリン';
+  S.amount=''; S.imageB64=''; S.aiAmount=''; S.memo='';
+  go('date');
+}
+function startReceipt(cat){
+  S.mode='receipt'; S.category=cat;
+  S.km=''; S.from=''; S.to=''; S.trip=''; S.amount=''; S.imageB64=''; S.aiAmount=''; S.memo='';
+  if(cat) go('date'); else go('category');
+}
+
+/* --- 科目（その他） --- */
+SCREENS.category = function(){
+  var h = '<h2>種類を選んでください</h2><div class="grid g2">';
+  S.cfg.categories.forEach(function(c){
+    if(c==='高速代'||c==='駐車場代') return;
+    h += '<button class="btn" onclick="pickCat(\''+esc(c)+'\')">'+esc(c)+'</button>';
+  });
+  return h + '</div>';
+};
+function pickCat(c){ S.category=c; go('date'); }
+
+/* --- 科目（確認画面から選び直す場合は全科目を出す） --- */
+SCREENS.categoryAll = function(){
+  var h = '<h2>種類を選び直す</h2><div class="grid g2">';
+  S.cfg.categories.forEach(function(c){
+    h += '<button class="btn '+(S.category===c?'sel':'')+'" onclick="pickCatAll(\''+esc(c)+'\')">'+esc(c)+'</button>';
+  });
+  return h + '</div>';
+};
+function pickCatAll(c){ S.category=c; goBack(); }
+
+/* --- 日付 --- */
+SCREENS.date = function(){
+  var y = new Date(new Date(S.today+'T00:00:00+09:00').getTime()-86400000);
+  var yi = y.getFullYear()+'-'+('0'+(y.getMonth()+1)).slice(-2)+'-'+('0'+y.getDate()).slice(-2);
+  var inP = function(d){ return S.dates.indexOf(d)>=0; };
+
+  var h = '<h2>いつの分ですか</h2><div class="grid g2">'+
+    '<button class="btn big" '+(inP(S.today)?'':'disabled')+' onclick="pickDate(\''+S.today+'\')">今日<br>'+mdLabel(S.today)+'</button>'+
+    '<button class="btn big" '+(inP(yi)?'':'disabled')+' onclick="pickDate(\''+yi+'\')">昨日<br>'+mdLabel(yi)+'</button>'+
+    '</div>'+
+    '<p class="note sec">'+esc(S.periodLabel)+' の中から選べます</p><div class="grid g4">';
+  S.dates.forEach(function(d){
+    var future = d > S.today;
+    h += '<button class="btn sm '+(S.date===d?'sel':'')+'" '+(future?'disabled':'')+
+         ' onclick="pickDate(\''+d+'\')">'+mdLabel(d)+'<br><span style="font-size:12px;color:var(--sub)">'+wd(d)+'</span></button>';
+  });
+  h += '</div>';
+  h += '<div class="grid g1 sec"><button class="btn sm ghost" onclick="go(\'datePrev\')">'+
+       '前の期間（'+esc(prevLabel())+'）の日付を選ぶ</button></div>';
+  h += '<p class="note">締め日を過ぎてから出てきた領収書は、前の期間の日付を選んで申請してください。'+
+       esc(S.periodLabel)+' 分としてまとめて精算されます。</p>';
+  return h;
+};
+
+/* 前の期間の日付一覧（締め後に出てきた領収書の繰り越し用） */
+function prevDates(){
+  var first = S.dates[0];                       // 例 2026-08-21
+  var d = new Date(first+'T00:00:00+09:00');
+  var out = [], n = S.dates.length;
+  for(var i=n;i>0;i--){
+    var x = new Date(d.getTime() - i*86400000);
+    out.push(x.getFullYear()+'-'+('0'+(x.getMonth()+1)).slice(-2)+'-'+('0'+x.getDate()).slice(-2));
+  }
+  return out;
+}
+function prevLabel(){
+  var a = prevDates();
+  return mdLabel(a[0])+'〜'+mdLabel(a[a.length-1]);
+}
+SCREENS.datePrev = function(){
+  var h = '<h2>前の期間の日付</h2>'+
+    '<p class="lead">選んだ日付は「'+esc(S.periodLabel)+' 分」として精算されます</p><div class="grid g4">';
+  prevDates().forEach(function(d){
+    h += '<button class="btn sm '+(S.date===d?'sel':'')+'" onclick="pickDate(\''+d+'\')">'+
+         mdLabel(d)+'<br><span style="font-size:12px;color:var(--sub)">'+wd(d)+'</span></button>';
+  });
+  return h+'</div>';
+};
+function pickDate(d){ S.date=d; go('clinic'); }
+
+/* --- 所属院 --- */
+SCREENS.clinic = function(){
+  var h = '<h2>どの院の分ですか</h2><p class="lead">前回と同じなら、そのまま選んでください</p><div class="grid g2">';
+  S.cfg.clinics.forEach(function(c){
+    h += '<button class="btn sm '+(S.clinic===c?'sel':'')+'" onclick="pickClinic(\''+esc(c)+'\')">'+esc(c)+'</button>';
+  });
+  return h+'</div>';
+};
+function pickClinic(c){
+  S.clinic=c;
+  if(S.mode==='gas') go('trip'); else go('photo');
+}
+
+/* --- 移動区分（ガソリン） --- */
+SCREENS.trip = function(){
+  return '<h2>どちらの移動ですか</h2>'+
+  '<div class="grid g2">'+
+    '<button class="btn big" onclick="pickTrip(\'業務\')">業務</button>'+
+    '<button class="btn big" onclick="pickTrip(\'通勤\')">通勤</button>'+
+  '</div>';
+};
+function pickTrip(t){ S.trip=t; go('route'); }
+
+/* --- 出発地・到着地（ガソリン） --- */
+SCREENS.route = function(){
+  return '<h2>どこからどこまで</h2>'+
+  '<label class="fl">出発地</label>'+
+  '<input type="text" id="fromV" value="'+esc(S.from)+'" placeholder="例：自宅">'+
+  '<label class="fl">到着地</label>'+
+  '<input type="text" id="toV" value="'+esc(S.to)+'" placeholder="例：東生駒院">'+
+  '<div class="msg err" id="routeMsg" aria-live="polite"></div>'+
+  '<button class="btn primary sec" onclick="saveRoute()">次へ進む</button>';
+};
+function saveRoute(){
+  var f=document.getElementById('fromV').value.trim();
+  var t=document.getElementById('toV').value.trim();
+  var m=document.getElementById('routeMsg');
+  if(!f||!t){ m.textContent='出発地と到着地の両方を入力してください。'; return; }
+  S.from=f; S.to=t; go('km');
+}
+
+/* --- 走行距離（ガソリン） --- */
+SCREENS.km = function(){
+  return '<h2>走行距離</h2>'+
+  '<p class="lead">'+esc(S.from)+' → '+esc(S.to)+'</p>'+
+  '<label class="fl">距離（km）</label>'+
+  '<input type="number" id="kmV" inputmode="decimal" step="0.1" min="0" value="'+esc(S.km)+'" placeholder="例：31" oninput="calcGas()">'+
+  '<div class="bar sec">金額 <span class="v" id="gasAmt">— 円</span>'+
+    '<div class="note" style="margin:2px 0 0">1kmあたり '+S.cfg.gasRate+'円で自動計算されます</div></div>'+
+  '<div class="msg err" id="kmMsg" aria-live="polite"></div>'+
+  '<button class="btn primary" id="kmNext" onclick="saveKm()" disabled>確認画面へ</button>';
+};
+AFTER.km = function(){ calcGas(); };
+function calcGas(){
+  var v = parseFloat(document.getElementById('kmV').value);
+  var ok = v>0 && v<=2000;
+  document.getElementById('gasAmt').textContent = ok ? yen(Math.round(v*S.cfg.gasRate))+' 円' : '— 円';
+  document.getElementById('kmNext').disabled = !ok;
+}
+function saveKm(){
+  var v = parseFloat(document.getElementById('kmV').value);
+  if(!(v>0)){ document.getElementById('kmMsg').textContent='走行距離を入力してください。'; return; }
+  S.km=v; S.amount=Math.round(v*S.cfg.gasRate);
+  go('memo');
+}
+
+/* --- 領収書の撮影 --- */
+SCREENS.photo = function(){
+  return '<h2>領収書を撮影してください</h2>'+
+  '<p class="lead">'+esc(S.category)+' ／ '+mdLabel(S.date)+'</p>'+
+  '<input type="file" id="file" accept="image/*" capture="environment" class="hide" onchange="onPick(event)">'+
+  '<div class="grid g1">'+
+    '<button class="btn primary" onclick="document.getElementById(\'file\').click()">カメラで撮る／写真を選ぶ</button>'+
+  '</div>'+
+  '<div id="prevBox"></div>'+
+  '<div class="msg" id="aiMsg" aria-live="polite"></div>'+
+  '<div class="grid g1 sec">'+
+    '<button class="btn ghost sm" onclick="noReceipt()">領収書がないので手入力する</button>'+
+  '</div>'+
+  '<p class="note">1枚ずつ撮ってください。レシートが長い場合は、合計金額が読める範囲で構いません。</p>';
+};
+function noReceipt(){ S.imageB64=''; S.aiAmount=''; go('amount'); }
+
+function onPick(ev){
+  var f = ev.target.files && ev.target.files[0];
+  if(!f) return;
+  var msg = document.getElementById('aiMsg');
+  msg.className='msg'; msg.textContent='画像を準備しています…';
+
+  resize(f, 1600, 0.8).then(function(b64){
+    S.imageB64 = b64;
+    document.getElementById('prevBox').innerHTML =
+      '<img class="prev" src="data:image/jpeg;base64,'+b64+'" alt="撮影した領収書">';
+    msg.textContent='AIが読み取っています…';
+    return api('apiReadReceipt',{idToken:S.idToken, imageBase64:b64});
+  }).then(function(r){
+    if(r && r.ok && r.ai){
+      if(r.ai.amount) S.amount = r.ai.amount;
+      S.aiAmount = r.ai.amount || '';
+      S.aiStore  = r.ai.store || '';
+      if(!S.category && r.ai.kind) S.category = r.ai.kind;
+      msg.className='msg ok'; msg.textContent='読み取りました。次の画面で内容をご確認ください。';
+    }else{
+      S.aiAmount=''; msg.className='msg';
+      msg.textContent = (r && r.note) ? r.note : '自動読み取りができませんでした。手入力してください。';
+    }
+    go('amount');
+  }).catch(function(){
+    msg.className='msg err'; msg.textContent='画像の処理に失敗しました。もう一度お試しください。';
+  });
+}
+
+/* 画像を縮小してbase64（データURLのヘッダを除いた部分）にする */
+function resize(file, max, q){
+  return new Promise(function(res, rej){
+    var img = new Image(), url = URL.createObjectURL(file);
+    img.onload = function(){
+      var w=img.width, h=img.height, s=Math.min(1, max/Math.max(w,h));
+      var cv=document.createElement('canvas');
+      cv.width=Math.round(w*s); cv.height=Math.round(h*s);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      URL.revokeObjectURL(url);
+      res(cv.toDataURL('image/jpeg', q).split(',')[1]);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); rej(); };
+    img.src = url;
+  });
+}
+
+/* --- 金額の確認・修正 --- */
+SCREENS.amount = function(){
+  var hint = S.aiAmount ? '<p class="note">AIが読み取った金額です。違っていれば直してください。'+
+             (S.aiStore ? '（'+esc(S.aiStore)+'）' : '')+'</p>' : '';
+  return '<h2>金額をご確認ください</h2>'+
+  '<p class="lead">'+esc(S.category||'その他')+' ／ '+mdLabel(S.date)+'</p>'+
+  '<label class="fl">金額（税込・円）</label>'+
+  '<input type="number" id="amtV" inputmode="numeric" min="1" value="'+esc(S.amount)+'" placeholder="例：1204" oninput="chkAmt()">'+
+  hint+
+  '<div class="msg err" id="amtMsg" aria-live="polite"></div>'+
+  '<button class="btn primary sec" id="amtNext" onclick="saveAmt()">次へ進む</button>';
+};
+AFTER.amount = function(){ chkAmt(); };
+function chkAmt(){
+  var v = parseInt(document.getElementById('amtV').value,10);
+  document.getElementById('amtNext').disabled = !(v>0);
+}
+function saveAmt(){
+  var v = parseInt(document.getElementById('amtV').value,10);
+  if(!(v>0)){ document.getElementById('amtMsg').textContent='金額を入力してください。'; return; }
+  S.amount=v; go('memo');
+}
+
+/* --- 内容メモ --- */
+SCREENS.memo = function(){
+  var chips = S.mode==='gas'
+    ? ['訪問','院間移動','会議','研修']
+    : ['備品購入','消耗品','来客用','研修関連'];
+  var h = '<h2>内容の補足</h2><p class="lead">必要なければ空欄のままで構いません</p><div class="grid g2">';
+  chips.forEach(function(c){ h+='<button class="btn sm" onclick="addMemo(\''+esc(c)+'\')">'+esc(c)+'</button>'; });
+  h += '</div><label class="fl">自由入力</label><textarea id="memoV" placeholder="例：〇〇様宅への訪問">'+esc(S.memo)+'</textarea>'+
+       '<button class="btn primary sec" onclick="saveMemo()">確認画面へ</button>';
+  return h;
+};
+function addMemo(t){
+  var el=document.getElementById('memoV');
+  el.value = el.value ? (el.value+' '+t) : t;
+}
+function saveMemo(){ S.memo=document.getElementById('memoV').value.trim(); go('confirm'); }
+
+/* --- 確認 --- */
+SCREENS.confirm = function(){
+  var r = function(k,v,scr,opt){
+    return '<div class="row '+(scr?'tap':'')+'" '+(scr?'onclick="go(\''+scr+'\')"':'')+'>'+
+      '<div class="k">'+k+'</div><div class="v">'+v+'</div>'+(scr?'<div class="arrow">›</div>':'')+'</div>';
+  };
+  var h = '<h2>この内容で登録します</h2><div class="rows">';
+  h += r('氏名', esc(S.emp.name));
+  h += r('日付', mdLabel(S.date)+'（'+wd(S.date)+'）', 'date');
+  h += r('所属院', esc(S.clinic), 'clinic');
+  h += r('種類', esc(S.category), S.mode==='gas'?null:'categoryAll');
+  if(S.mode==='gas'){
+    h += r('移動区分', esc(S.trip), 'trip');
+    h += r('経路', esc(S.from)+' → '+esc(S.to), 'route');
+    h += r('距離', S.km+' km', 'km');
+  }else{
+    h += r('領収書', S.imageB64?'あり':'なし（手入力）', 'photo');
+  }
+  h += r('内容', esc(S.memo||'（なし）'), 'memo');
+  h += '</div>';
+  h += '<div class="bar">金額 <span class="v amt">'+yen(S.amount)+' 円</span>'+
+       (S.mode==='gas' ? '<div class="note" style="margin:2px 0 0">'+S.km+'km × '+S.cfg.gasRate+'円</div>' : '')+
+       (S.mode!=='gas' ? '<div class="note" style="margin:2px 0 0"><a href="#" onclick="go(\'amount\');return false;">金額を直す</a></div>' : '')+
+       '</div>';
+  h += '<div class="msg err" id="cfMsg" aria-live="polite"></div>';
+  h += '<button class="btn primary" id="submitBtn" onclick="submitOne(false)">この内容で登録する</button>';
+  h += '<div id="dupBox"></div>';
+  h += '<button class="btn ghost sm sec" onclick="restart()">はじめからやり直す</button>';
+  return h;
+};
+function restart(){ nav=[]; replace('menu'); }
+
+function submitOne(confirmed){
+  var b=document.getElementById('submitBtn'), m=document.getElementById('cfMsg');
+  b.disabled=true; b.textContent='登録しています…'; m.className='msg'; m.textContent='';
+  api('apiSubmit',{ idToken:S.idToken, payload:{
+    date:S.date, clinic:S.clinic, category:S.category, amount:S.amount,
+    km:S.km, from:S.from, to:S.to, trip:S.trip, memo:S.memo,
+    imageBase64:S.imageB64, aiAmount:S.aiAmount, confirmed:!!confirmed
+  }}).then(function(r){
+    if(r.ok){ nav=[]; replace('done', r); return; }
+    b.disabled=false; b.textContent='この内容で登録する';
+    m.className='msg err'; m.textContent=r.error;
+    if(r.duplicate){
+      document.getElementById('dupBox').innerHTML =
+        '<button class="btn danger sec" onclick="submitOne(true)">それでも登録する</button>';
+    }
+  }).catch(function(){
+    b.disabled=false; b.textContent='この内容で登録する';
+    m.className='msg err'; m.textContent='通信に失敗しました。もう一度お試しください。';
+  });
+}
+
+/* --- 完了 --- */
+SCREENS.done = function(r){
+  var d = S.date;
+  return '<h2 style="color:var(--green)">登録しました</h2>'+
+  '<div class="rows sec">'+
+    '<div class="row"><div class="k">日付</div><div class="v">'+mdLabel(d)+'（'+wd(d)+'）</div></div>'+
+    '<div class="row"><div class="k">種類</div><div class="v">'+esc(S.category)+'</div></div>'+
+    '<div class="row"><div class="k">金額</div><div class="v amt">'+yen(r.amount)+' 円</div></div>'+
+    '<div class="row"><div class="k">精算</div><div class="v">'+esc(r.periodLabel)+' 分</div></div>'+
+  '</div>'+
+  '<div class="grid g1">'+
+    '<button class="btn primary" onclick="sameDay()">同じ日の分を続けて登録する</button>'+
+    '<button class="btn" onclick="restart()">別の日の分を登録する</button>'+
+    '<button class="btn ghost sm" onclick="closeApp()">終わる</button>'+
+  '</div>';
+};
+function sameDay(){
+  var keepDate=S.date, keepClinic=S.clinic;
+  nav=[]; replace('menu');
+  S.date=keepDate; S.clinic=keepClinic;
+}
+function closeApp(){ if(liff.isInClient()) liff.closeWindow(); else location.reload(); }
+
+/* =========================================================
+   起動
+   ========================================================= */
+function boot(){
+  liff.init({liffId:LIFF_ID}).then(function(){
+    if(!liff.isLoggedIn()){ liff.login(); return; }
+    S.idToken = liff.getIDToken();
+    return api('apiGetProfile',{idToken:S.idToken});
+  }).then(function(r){
+    if(!r) return;
+    if(!r.ok){ fail(r.error||'読み込みに失敗しました。'); return; }
+    S.cfg=r.config; S.period=r.period; S.periodLabel=r.periodLabel;
+    S.dates=r.dates; S.today=r.today;
+    if(r.linked){
+      S.emp=r.employee; S.clinic=r.employee.clinic||'';
+      setWho(); render('menu');
+    }else{
+      render('link');
+    }
+  }).catch(function(e){
+    fail('初期化に失敗しました。LINEアプリから開き直してください。');
+  });
+}
+function fail(msg){
+  document.getElementById('app').innerHTML =
+    '<div class="center"><p class="msg err">'+esc(msg)+'</p>'+
+    '<button class="btn sec" onclick="location.reload()">読み込み直す</button></div>';
+}
+boot();
+</script>
+</body>
+</html>
