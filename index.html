@@ -7,8 +7,8 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
 :root{
-  --green:#06C755; --ink:#1e2225; --sub:#5a656d; --line:#e3e7ea;
-  --bg:#ffffff; --soft:#f5f6f8; --red:#d93025; --sun:#e05a4e; --sat:#3b7dd8;
+  --green:#06C755; --ink:#1e2225; --sub:#6b7378; --line:#e4e8ea;
+  --bg:#ffffff; --soft:#f4f6f7; --red:#d93025; --sun:#e05a4e; --sat:#3b7dd8;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%}
@@ -17,45 +17,51 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP"
      display:flex;flex-direction:column;overflow:hidden}
 button{font-family:inherit;font-size:inherit;color:inherit}
 #root{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
+      stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
-/* ===== ヘッダー ===== */
-.hd{display:flex;align-items:center;justify-content:space-between;
-    padding:10px 14px;border-bottom:1px solid var(--line);flex:0 0 auto}
-.hd .ttl{font-size:18px;font-weight:700}
-.hd .nm{font-size:13px;color:var(--sub)}
-.pbtn{min-height:38px;padding:6px 12px;border:1px solid var(--line);border-radius:9px;
-      background:#fff;font-size:14px;color:var(--sub)}
-.pbtn:active{background:var(--soft)}
+/* ヘッダー */
+.hd{display:flex;align-items:center;gap:6px;padding:9px 10px;
+    border-bottom:1px solid var(--line);flex:0 0 auto}
+.hd .ttl{flex:1 1 auto;text-align:center}
+.hd .ttl b{display:block;font-size:17px}
+.hd .ttl span{font-size:11px;color:var(--sub)}
+.nav{min-width:44px;min-height:44px;border:none;background:none;color:var(--sub);
+     display:flex;align-items:center;justify-content:center}
+.nav:disabled{opacity:.25}
 
-/* ===== カレンダー ===== */
-.cal{flex:1 1 auto;overflow-y:auto;padding:8px 8px 4px}
-.wk{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:2px}
-.wk div{text-align:center;font-size:12px;color:var(--sub);padding:4px 0}
+/* カレンダー */
+.cal{flex:1 1 auto;overflow-y:auto;padding:6px 7px 4px;touch-action:pan-y}
+.wk{display:grid;grid-template-columns:repeat(7,1fr)}
+.wk div{text-align:center;font-size:11px;color:var(--sub);padding:3px 0}
 .wk div:first-child{color:var(--sun)} .wk div:last-child{color:var(--sat)}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-.cell{aspect-ratio:1/1.15;border:1px solid transparent;border-radius:10px;background:var(--soft);
-      display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-      padding:5px 2px 2px;position:relative;min-height:52px}
+.cell{aspect-ratio:1/1.12;border:1.5px solid transparent;border-radius:10px;background:var(--soft);
+      display:flex;flex-direction:column;align-items:center;padding:4px 2px 3px;
+      position:relative;min-height:50px}
 .cell.blank{background:transparent}
-.cell.out{background:#fafbfc;color:#c3c9cd}
-.cell:not(.blank):not(.out):active{background:#e8eaed}
-.cell .d{font-size:15px;font-weight:600;line-height:1.1}
+.cell:not(.blank):active{background:#e6e9eb}
+.cell .d{font-size:15px;font-weight:600;line-height:1.15}
 .cell.sun .d{color:var(--sun)} .cell.sat .d{color:var(--sat)}
-.cell.today{border-color:var(--green)}
-.cell.today .d{color:var(--green)}
-.cell .amt{font-size:10px;color:var(--sub);margin-top:auto;line-height:1.2;
+.cell.today{border-color:var(--green)} .cell.today .d{color:var(--green)}
+.cell .amt{font-size:10px;color:var(--sub);margin-top:auto;line-height:1.15;
            white-space:nowrap;overflow:hidden;max-width:100%}
-.cell .cnt{position:absolute;top:4px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--green)}
-.cell.future{opacity:.45}
+.cell.future{opacity:.4}
 
-/* ===== 合計バー ===== */
-.sum{flex:0 0 auto;border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));
-     display:flex;align-items:baseline;justify-content:space-between;background:#fff}
-.sum .lbl{font-size:13px;color:var(--sub)}
-.sum .v{font-size:24px;font-weight:700}
-.sum .cn{font-size:13px;color:var(--sub);margin-left:6px}
+/* 下部バー */
+.foot{flex:0 0 auto;border-top:1px solid var(--line);background:#fff;
+      padding:9px 14px calc(9px + env(safe-area-inset-bottom))}
+.tot{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px}
+.tot .lbl{font-size:12px;color:var(--sub)}
+.tot .v{font-size:22px;font-weight:700}
+.tot .cn{font-size:12px;color:var(--sub);margin-left:5px}
+.shoot{width:100%;min-height:56px;border:none;border-radius:14px;background:var(--green);
+       color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;
+       justify-content:center;gap:9px}
+.shoot:active{background:#05b34c}
+.shoot svg.i{width:24px;height:24px;stroke-width:1.9}
 
-/* ===== シート（ポップアップ） ===== */
+/* シート */
 .mask{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;
       transition:opacity .18s;z-index:20}
 .mask.on{opacity:1;pointer-events:auto}
@@ -63,59 +69,78 @@ button{font-family:inherit;font-size:inherit;color:inherit}
        border-radius:18px 18px 0 0;transform:translateY(100%);transition:transform .22s;
        max-height:92vh;display:flex;flex-direction:column}
 .sheet.on{transform:translateY(0)}
-.sheet .bar{padding:12px 16px 8px;border-bottom:1px solid var(--line);flex:0 0 auto;
-            display:flex;align-items:center;justify-content:space-between}
-.sheet .bar h3{margin:0;font-size:17px}
-.sheet .body{overflow-y:auto;padding:12px 16px calc(16px + env(safe-area-inset-bottom));flex:1 1 auto}
-.x{min-width:44px;min-height:38px;border:none;background:none;color:var(--sub);font-size:20px}
-.back{min-height:38px;padding:4px 10px;border:none;background:none;color:var(--sub);font-size:15px}
+.sheet .bar{padding:11px 14px 9px;border-bottom:1px solid var(--line);flex:0 0 auto;
+            display:flex;align-items:center;gap:8px}
+.sheet .bar h3{margin:0;font-size:17px;flex:1 1 auto}
+.sheet .bar .rt{font-size:16px;font-weight:700}
+.sheet .body{overflow-y:auto;padding:12px 14px calc(16px + env(safe-area-inset-bottom));flex:1 1 auto}
+.x,.back{min-width:44px;min-height:40px;border:none;background:none;color:var(--sub);
+         display:flex;align-items:center;justify-content:center}
 
-/* ===== 明細行 ===== */
-.item{display:flex;align-items:center;gap:10px;padding:13px 4px;border-bottom:1px solid var(--line);
+/* 明細行 */
+.item{display:flex;align-items:center;gap:10px;padding:12px 2px;border-bottom:1px solid var(--line);
       min-height:56px}
 .item:active{background:var(--soft)}
-.item .ic{width:34px;height:34px;border-radius:9px;background:var(--soft);flex:0 0 auto;
-          display:flex;align-items:center;justify-content:center;font-size:16px}
+.item .ic{width:36px;height:36px;border-radius:10px;background:var(--soft);flex:0 0 auto;
+          display:flex;align-items:center;justify-content:center;color:var(--sub)}
 .item .tx{flex:1 1 auto;min-width:0}
 .item .t1{font-size:15px;font-weight:600}
 .item .t2{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .item .yen{font-size:16px;font-weight:700;flex:0 0 auto}
-.item .ar{color:#c9ced2;flex:0 0 auto}
-.empty{text-align:center;color:var(--sub);font-size:14px;padding:22px 0}
+.empty{text-align:center;color:var(--sub);font-size:14px;padding:20px 0}
 
-/* ===== 入力パーツ ===== */
-.add{width:100%;min-height:52px;border:1px dashed var(--green);border-radius:12px;background:#f2fbf5;
-     color:var(--green);font-weight:700;font-size:16px;margin-top:14px}
-.add:active{background:#e4f7ea}
-.big{width:100%;min-height:58px;border:1px solid var(--line);border-radius:12px;background:#fff;
+/* 確認カード（撮影後） */
+.card{border:1px solid var(--line);border-radius:14px;padding:12px 13px;margin-bottom:10px}
+.card.done{border-color:var(--green);background:#f4fcf7}
+.card .top{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.card .cat{font-weight:700;font-size:16px;flex:1 1 auto}
+.card .amt2{font-size:20px;font-weight:700}
+.card .sub{font-size:13px;color:var(--sub);margin-bottom:9px}
+.card .row2{display:flex;gap:8px}
+.card .ok{flex:1 1 auto;min-height:46px;border:none;border-radius:11px;background:var(--green);
+          color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
+.card .fix{min-height:46px;padding:0 16px;border:1px solid var(--line);border-radius:11px;background:#fff}
+.card.done .ok{background:#d8f2e2;color:#04913f}
+.thumb{width:56px;height:56px;object-fit:cover;border-radius:9px;border:1px solid var(--line);flex:0 0 auto}
+.prog{font-size:13px;color:var(--sub);text-align:center;padding:10px 0}
+.stick{position:sticky;bottom:0;background:#fff;padding-top:10px;
+       box-shadow:0 -8px 12px -8px rgba(0,0,0,.12)}
+
+/* 入力パーツ */
+.add{width:100%;min-height:50px;border:1px dashed var(--green);border-radius:12px;background:#f2fbf5;
+     color:var(--green);font-weight:700;font-size:15px;margin-top:12px;
+     display:flex;align-items:center;justify-content:center;gap:7px}
+.big{width:100%;min-height:56px;border:1px solid var(--line);border-radius:12px;background:#fff;
      display:flex;align-items:center;gap:12px;padding:0 14px;margin-bottom:8px;text-align:left;font-size:16px}
 .big:active{background:var(--soft)}
-.big .e{font-size:22px}
 .big .s{display:block;font-size:12px;color:var(--sub);font-weight:400}
-label.fl{display:block;font-size:13px;color:var(--sub);margin:14px 0 6px}
-input[type=text],input[type=number]{width:100%;padding:13px;font-size:17px;border:1px solid var(--line);
-  border-radius:11px;background:#fff;color:var(--ink);font-family:inherit}
-select{width:100%;padding:13px;font-size:17px;border:1px solid var(--line);border-radius:11px;
+label.fl{display:block;font-size:12px;color:var(--sub);margin:13px 0 5px}
+input[type=text],input[type=number],input[type=date]{width:100%;padding:12px;font-size:17px;
+  border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-family:inherit}
+select{width:100%;padding:12px;font-size:17px;border:1px solid var(--line);border-radius:11px;
   background:#fff;color:var(--ink);font-family:inherit;-webkit-appearance:none;appearance:none;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' stroke='%235a656d' stroke-width='2' fill='none'/></svg>");
-  background-repeat:no-repeat;background-position:right 14px center}
-.chips{display:flex;flex-wrap:wrap;gap:7px}
-.chip{padding:9px 14px;min-height:42px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:15px}
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' stroke='%236b7378' stroke-width='2' fill='none'/></svg>");
+  background-repeat:no-repeat;background-position:right 13px center}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:8px 13px;min-height:40px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:15px}
 .chip.on{border-color:var(--green);background:#eafaf1;color:#04913f;font-weight:700}
-.save{width:100%;min-height:54px;border:none;border-radius:12px;background:var(--green);color:#fff;
-      font-weight:700;font-size:17px;margin-top:18px}
+.rchip{width:100%;text-align:left;padding:11px 13px;min-height:48px;border:1px solid var(--line);
+       border-radius:11px;background:#fff;margin-bottom:7px;font-size:15px}
+.rchip span{color:var(--sub);font-size:13px}
+.save{width:100%;min-height:52px;border:none;border-radius:12px;background:var(--green);color:#fff;
+      font-weight:700;font-size:17px;margin-top:16px}
 .save:disabled{background:#b8e6c9}
-.del{width:100%;min-height:48px;border:1px solid #f0c3bf;border-radius:12px;background:#fff;
+.del{width:100%;min-height:46px;border:1px solid #f0c3bf;border-radius:12px;background:#fff;
      color:var(--red);font-size:15px;margin-top:10px}
-.calc{background:var(--soft);border-radius:11px;padding:11px 14px;margin-top:12px;font-size:14px}
-.calc b{font-size:22px}
-.msg{font-size:14px;margin:10px 0;min-height:1.1em}
+.calc{background:var(--soft);border-radius:11px;padding:10px 13px;margin-top:11px;font-size:14px}
+.calc b{font-size:21px}
+.msg{font-size:14px;margin:9px 0;min-height:1.1em}
 .msg.err{color:var(--red)} .msg.ok{color:var(--green)}
 .note{font-size:12px;color:var(--sub);margin:8px 0 0}
-.prev{width:100%;border-radius:11px;border:1px solid var(--line);margin:10px 0;display:block}
+.prev{width:100%;border-radius:11px;border:1px solid var(--line);margin:9px 0;display:block}
 .hide{display:none}
 .center{text-align:center;padding:60px 20px;color:var(--sub)}
-.spin{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--green);
+.spin{width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--green);
       border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 12px}
 @keyframes sp{to{transform:rotate(360deg)}}
 </style>
@@ -123,6 +148,7 @@ select{width:100%;padding:13px;font-size:17px;border:1px solid var(--line);borde
 <body>
 
 <div id="root"><div class="center"><div class="spin"></div>読み込んでいます…</div></div>
+<input type="file" id="file" accept="image/*" capture="environment" multiple class="hide" onchange="onPick(event)">
 
 <div class="mask" id="mask" onclick="closeSheet()"></div>
 <div class="sheet" id="sheet">
@@ -131,419 +157,513 @@ select{width:100%;padding:13px;font-size:17px;border:1px solid var(--line);borde
 </div>
 
 <script>
-/* =========================================================
-   設定
-   ========================================================= */
+/* ========================================================= */
 var LIFF_ID     = '2011524519-lSwDjFOP';
 var GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwYguEyJP2VaZ3xixjiCUIHy2a_qAW_umaaQ4UAGgsT9N0jLo7gajy-y2s4qV7d0zBz/exec';
+var MAX_PHOTOS  = 10;
 /* ========================================================= */
 
 var S = {
   idToken:'', emp:null, cfg:null,
   period:'', periodLabel:'', dates:[], today:'',
-  items:[],                 // 期間内の明細
-  day:'',                   // 開いている日
-  draft:null,               // 編集中の1件
-  lastClinic:''
+  items:[], routes:[], defClinic:'',
+  view:'',                 // 表示中の期間
+  cache:{},                // 期間 → 明細
+  day:'', draft:null,
+  queue:[]                 // 撮影して確認待ちの明細
 };
 
-/* ---------- 通信 ---------- */
-function api(fn, args){
-  return fetch(GAS_API_URL,{
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify({fn:fn, args:args||{}})
-  }).then(function(r){ return r.json(); });
+/* ---------- アイコン（iOS風の線画・自前SVG） ---------- */
+var IC = {
+  camera:'<path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.7l1-1.7a1 1 0 0 1 .9-.5h5.8a1 1 0 0 1 .9.5l1 1.7h1.7A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.5" r="3.4"/>',
+  car:'<path d="M5 16.5h14M6.2 12l1.3-3.7A2 2 0 0 1 9.4 7h5.2a2 2 0 0 1 1.9 1.3L17.8 12"/><rect x="3.5" y="12" width="17" height="4.5" rx="1.6"/><path d="M6.5 16.5v1.8M17.5 16.5v1.8"/>',
+  road:'<path d="M8.5 4 6 20M15.5 4 18 20M12 5v2.5M12 11v2.5M12 17v2.5"/>',
+  park:'<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M10 16V8.5h2.6a2.4 2.4 0 0 1 0 4.8H10"/>',
+  doc:'<path d="M6.5 3.5h7l4.5 4.5v12a1 1 0 0 1-1 1h-10.5a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z"/><path d="M13.5 3.5V8h4.5M9 13h6M9 16.5h4"/>',
+  pencil:'<path d="M4 20h4l10-10a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14.5 6.5 17.5 9.5"/>',
+  check:'<path d="M5 12.5 10 17.5 19 7"/>',
+  left:'<path d="M14.5 5 8 12l6.5 7"/>',
+  right:'<path d="M9.5 5 16 12l-6.5 7"/>',
+  gear:'<circle cx="12" cy="12" r="3.2"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M18 6l-1.4 1.4M7.4 16.6 6 18"/>',
+  close:'<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
+  plus:'<path d="M12 5.5v13M5.5 12h13"/>',
+  trash:'<path d="M4.5 6.5h15M9.5 6.5V4.8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1.7M6.5 6.5l.9 12a1 1 0 0 0 1 .9h7.2a1 1 0 0 0 1-.9l.9-12"/>'
+};
+function ico(n, cls){ return '<svg class="i '+(cls||'')+'" viewBox="0 0 24 24">'+IC[n]+'</svg>'; }
+function catIcon(c){
+  return c==='ガソリン'?'car':c==='高速代'?'road':c==='駐車場代'?'park':'doc';
 }
 
 /* ---------- 小道具 ---------- */
+function api(fn,args){
+  return fetch(GAS_API_URL,{method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({fn:fn,args:args||{}})}).then(function(r){return r.json();});
+}
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function yen(n){ return Number(n||0).toLocaleString('ja-JP'); }
 function md(iso){ var p=iso.split('-'); return Number(p[1])+'/'+Number(p[2]); }
-// 端末のタイムゾーンに影響されないよう、日付文字列から直接曜日を求める
-function dow(iso){
-  var p=iso.split('-');
-  return new Date(Date.UTC(Number(p[0]), Number(p[1])-1, Number(p[2]))).getUTCDay();
-}
+function dow(iso){ var p=iso.split('-');
+  return new Date(Date.UTC(Number(p[0]),Number(p[1])-1,Number(p[2]))).getUTCDay(); }
 function wdName(iso){ return '日月火水木金土'[dow(iso)]; }
-function icon(cat){
-  return cat==='ガソリン'?'⛽':cat==='高速代'?'🛣':cat==='駐車場代'?'🅿️':'🧾';
-}
 function itemsOf(d){ return S.items.filter(function(x){ return x.date===d; }); }
-function sumOf(list){ var t=0; list.forEach(function(x){ t+=Number(x.amount)||0; }); return t; }
+function sumOf(l){ var t=0; l.forEach(function(x){ t+=Number(x.amount)||0; }); return t; }
+function shiftPeriod(p,n){
+  var a=p.split('-'), y=Number(a[0]), m=Number(a[1])+n;
+  while(m<1){ m+=12; y--; } while(m>12){ m-=12; y++; }
+  return y+'-'+('0'+m).slice(-2);
+}
+function periodLabelOf(p){
+  var a=p.split('-'), m=Number(a[1]), sm=m-1; if(sm<1) sm=12;
+  return sm+'/'+(S.cfg.closingDay+1)+'〜'+m+'/'+S.cfg.closingDay;
+}
+function datesOf(p){
+  var a=p.split('-'), y=Number(a[0]), m=Number(a[1]);
+  var cd=S.cfg.closingDay, out=[];
+  var cur=new Date(Date.UTC(y,m-2,cd+1)), end=new Date(Date.UTC(y,m-1,cd));
+  while(cur<=end){
+    out.push(cur.getUTCFullYear()+'-'+('0'+(cur.getUTCMonth()+1)).slice(-2)+'-'+('0'+cur.getUTCDate()).slice(-2));
+    cur.setUTCDate(cur.getUTCDate()+1);
+  }
+  return out;
+}
 
 /* =========================================================
    カレンダー
    ========================================================= */
 function renderCal(){
+  var isCur = (S.view===S.period);
   var h = '<div class="hd">'+
-    '<div><div class="ttl">'+esc(S.periodLabel)+'</div>'+
-    '<div class="nm">'+esc(S.emp.name)+' さんの経費</div></div>'+
-    '<button class="pbtn" onclick="openPrev()">前の期間</button>'+
+    '<button class="nav" onclick="goPeriod(-1)">'+ico('left')+'</button>'+
+    '<div class="ttl"><b>'+esc(periodLabelOf(S.view))+'</b>'+
+    '<span>'+esc(S.emp.name)+' さん'+(isCur?'':'　（締め切り済み）')+'</span></div>'+
+    '<button class="nav" onclick="goPeriod(1)" '+(isCur?'disabled':'')+'>'+ico('right')+'</button>'+
+    '<button class="nav" onclick="openSettings()">'+ico('gear')+'</button>'+
   '</div>';
 
-  h += '<div class="cal"><div class="wk">'+
+  h += '<div class="cal" id="cal"><div class="wk">'+
        '<div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>'+
        '</div><div class="grid">';
-
-  // 先頭の空白（週の始まりに合わせる）
-  var lead = dow(S.dates[0]);
-  for (var b=0;b<lead;b++) h += '<div class="cell blank"></div>';
-
-  S.dates.forEach(function(d){
-    var list = itemsOf(d), t = sumOf(list);
-    var cls = 'cell';
+  var ds = datesOf(S.view);
+  for (var b=0;b<dow(ds[0]);b++) h += '<div class="cell blank"></div>';
+  ds.forEach(function(d){
+    var t = sumOf(itemsOf(d)), cls='cell';
     if (dow(d)===0) cls+=' sun';
     if (dow(d)===6) cls+=' sat';
     if (d===S.today) cls+=' today';
     if (d > S.today) cls+=' future';
     h += '<button class="'+cls+'" onclick="openDay(\'' + d + '\')">'+
-         (list.length?'<span class="cnt"></span>':'')+
          '<span class="d">'+Number(d.split('-')[2])+'</span>'+
-         (t?'<span class="amt">'+yen(t)+'</span>':'')+
-         '</button>';
+         (t?'<span class="amt">'+yen(t)+'</span>':'')+'</button>';
   });
   h += '</div></div>';
 
-  var total = sumOf(S.items);
-  h += '<div class="sum"><span class="lbl">'+esc(S.periodLabel)+' の合計</span>'+
-       '<span><span class="v">'+yen(total)+'</span>円'+
-       '<span class="cn">'+S.items.length+'件</span></span></div>';
+  h += '<div class="foot"><div class="tot"><span class="lbl">この期間の合計</span>'+
+       '<span><span class="v">'+yen(sumOf(S.items))+'</span>円'+
+       '<span class="cn">'+S.items.length+'件</span></span></div>'+
+       (isCur ? '<button class="shoot" onclick="shoot()">'+ico('camera')+'領収書を撮る</button>' : '')+
+       '</div>';
 
   document.getElementById('root').innerHTML = h;
+  bindSwipe();
+}
+
+/* 左右スワイプで期間を移動 */
+function bindSwipe(){
+  var el = document.getElementById('cal'); if(!el) return;
+  var x0=0,y0=0,t0=0;
+  el.addEventListener('touchstart',function(e){
+    x0=e.touches[0].clientX; y0=e.touches[0].clientY; t0=Date.now(); },{passive:true});
+  el.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0;
+    if (Date.now()-t0>600) return;
+    if (Math.abs(dx)<55 || Math.abs(dx)<Math.abs(dy)*1.6) return;
+    goPeriod(dx<0 ? 1 : -1);
+  },{passive:true});
+}
+function goPeriod(n){
+  var next = shiftPeriod(S.view, n);
+  if (next > S.period) return;                 // 未来の期間は見せない
+  loadPeriod(next).then(renderCal);
+}
+function loadPeriod(p){
+  S.view = p;
+  if (S.cache[p]) { S.items = S.cache[p]; return Promise.resolve(); }
+  S.items = [];
+  return api('apiGetMyList',{idToken:S.idToken, period:p}).then(function(r){
+    if (r.ok){ S.items = r.items||[]; S.cache[p] = S.items; }
+  });
 }
 
 /* =========================================================
-   シート制御
+   シート
    ========================================================= */
 function openSheet(){ document.getElementById('mask').classList.add('on');
-                      document.getElementById('sheet').classList.add('on'); }
+  document.getElementById('sheet').classList.add('on'); }
 function closeSheet(){ document.getElementById('mask').classList.remove('on');
-                       document.getElementById('sheet').classList.remove('on'); S.draft=null; }
-function setSheet(barHtml, bodyHtml){
-  document.getElementById('sheetBar').innerHTML = barHtml;
-  document.getElementById('sheetBody').innerHTML = bodyHtml;
-  document.getElementById('sheetBody').scrollTop = 0;
+  document.getElementById('sheet').classList.remove('on'); S.draft=null; }
+function setSheet(bar,body){
+  document.getElementById('sheetBar').innerHTML=bar;
+  document.getElementById('sheetBody').innerHTML=body;
+  document.getElementById('sheetBody').scrollTop=0;
 }
+function closeBtn(){ return '<button class="x" onclick="closeSheet()">'+ico('close')+'</button>'; }
+function backBtn(fn){ return '<button class="back" onclick="'+fn+'">'+ico('left')+'</button>'; }
 
-/* --- 日別一覧 --- */
-function openDay(d){
-  S.day = d;
-  showDay();
-  openSheet();
-}
+/* --- 日別 --- */
+function openDay(d){ S.day=d; showDay(); openSheet(); }
 function showDay(){
-  var d = S.day, list = itemsOf(d);
-  var bar = '<h3>'+md(d)+'（'+wdName(d)+'）</h3><button class="x" onclick="closeSheet()">✕</button>';
-
-  var b = '';
-  if (!list.length) {
-    b += '<div class="empty">まだ登録がありません</div>';
-  } else {
-    list.forEach(function(x){
-      var sub = x.category==='ガソリン'
-        ? (x.from||'') + (x.to?' → '+x.to:'') + (x.km?'　'+x.km+'km':'')
-        : (x.clinic||'') + (x.memo?'　'+x.memo:'');
-      b += '<div class="item" onclick="editItem(\'' + x.id + '\')">'+
-           '<div class="ic">'+icon(x.category)+'</div>'+
-           '<div class="tx"><div class="t1">'+esc(x.category)+'</div>'+
-           '<div class="t2">'+esc(sub)+'</div></div>'+
-           '<div class="yen">'+yen(x.amount)+'</div><div class="ar">›</div></div>';
-    });
-    b += '<div class="calc" style="margin-top:14px">この日の合計 <b>'+yen(sumOf(list))+'</b> 円</div>';
-  }
-
-  if (d > S.today) {
-    b += '<p class="note">未来の日付には登録できません。</p>';
-  } else {
-    b += '<button class="add" onclick="chooseType()">＋ 経費を追加</button>';
-  }
-  setSheet(bar, b);
+  var d=S.day, list=itemsOf(d), locked=(S.view!==S.period);
+  var bar = '<h3>'+md(d)+'（'+wdName(d)+'）</h3>'+
+            (list.length?'<span class="rt">'+yen(sumOf(list))+'円</span>':'')+closeBtn();
+  var b='';
+  if(!list.length) b+='<div class="empty">まだ登録がありません</div>';
+  else list.forEach(function(x){
+    var sub = x.category==='ガソリン'
+      ? (x.from||'')+(x.to?' → '+x.to:'')+(x.km?'　'+x.km+'km':'')
+      : (x.clinic||'')+(x.memo?'　'+x.memo:'');
+    b+='<div class="item" '+(locked?'':'onclick="editItem(\'' + x.id + '\')"')+'>'+
+       '<div class="ic">'+ico(catIcon(x.category))+'</div>'+
+       '<div class="tx"><div class="t1">'+esc(x.category)+'</div>'+
+       '<div class="t2">'+esc(sub)+'</div></div>'+
+       '<div class="yen">'+yen(x.amount)+'</div></div>';
+  });
+  if (locked) b+='<p class="note">締め切り済みの期間は修正できません。</p>';
+  else if (d > S.today) b+='<p class="note">未来の日付には登録できません。</p>';
+  else b+='<button class="add" onclick="chooseType()">'+ico('plus')+'経費を追加</button>';
+  setSheet(bar,b);
 }
 
-/* --- 追加方法の選択 --- */
+/* --- 追加方法 --- */
 function chooseType(){
-  var bar = '<button class="back" onclick="showDay()">‹ 戻る</button>'+
-            '<h3>'+md(S.day)+' に追加</h3><button class="x" onclick="closeSheet()">✕</button>';
+  var bar = backBtn('showDay()')+'<h3>'+md(S.day)+' に追加</h3>'+closeBtn();
   var b =
-    '<button class="big" onclick="startPhoto()"><span class="e">📷</span>'+
-      '<span>領収書を撮る<span class="s">写真から金額と種類を自動で読み取ります</span></span></button>'+
-    '<button class="big" onclick="startGas()"><span class="e">⛽</span>'+
-      '<span>ガソリン代<span class="s">走行距離から自動計算・写真不要</span></span></button>'+
-    '<button class="big" onclick="startManual()"><span class="e">✏️</span>'+
-      '<span>手入力<span class="s">領収書がない経費はこちら</span></span></button>';
-  setSheet(bar, b);
+   '<button class="big" onclick="shoot()">'+ico('camera')+
+     '<span>領収書を撮る<span class="s">複数枚まとめて読み取ります</span></span></button>'+
+   '<button class="big" onclick="startGas()">'+ico('car')+
+     '<span>ガソリン代<span class="s">走行距離から自動計算・写真不要</span></span></button>'+
+   '<button class="big" onclick="startManual()">'+ico('pencil')+
+     '<span>手入力<span class="s">領収書がない経費はこちら</span></span></button>';
+  setSheet(bar,b);
 }
 
-/* --- 写真から --- */
-function startPhoto(){
-  var bar = '<button class="back" onclick="chooseType()">‹ 戻る</button>'+
-            '<h3>領収書を撮る</h3><button class="x" onclick="closeSheet()">✕</button>';
-  var b = '<input type="file" id="file" accept="image/*" capture="environment" class="hide" onchange="onPick(event)">'+
-    '<button class="big" style="justify-content:center;border-color:var(--green);color:var(--green);font-weight:700"'+
-      ' onclick="document.getElementById(\'file\').click()">📷 カメラを開く / 写真を選ぶ</button>'+
-    '<div id="prevBox"></div><div class="msg" id="aiMsg" aria-live="polite"></div>'+
-    '<p class="note">1枚ずつ撮ってください。うまく読めなくても、次の画面で手入力できます。</p>';
-  setSheet(bar, b);
-}
+/* =========================================================
+   撮影 → 一括確認
+   ========================================================= */
+function shoot(){ document.getElementById('file').click(); }
 
 function onPick(ev){
-  var f = ev.target.files && ev.target.files[0];
-  if (!f) return;
-  var msg = document.getElementById('aiMsg');
-  msg.className='msg'; msg.textContent='画像を準備しています…';
+  var files = Array.prototype.slice.call(ev.target.files||[]);
+  ev.target.value='';
+  if(!files.length) return;
+  if(files.length > MAX_PHOTOS) files = files.slice(0, MAX_PHOTOS);
 
-  toJpegBase64(f).then(function(b64){
-    document.getElementById('prevBox').innerHTML =
-      '<img class="prev" src="data:image/jpeg;base64,'+b64+'" alt="撮影した領収書">';
-    msg.textContent='AIが読み取っています…（10秒ほどかかります）';
-    return api('apiReadReceipt',{idToken:S.idToken, imageBase64:b64}).then(function(r){
-      var ai = (r && r.ok && r.ai) ? r.ai : null;
-      newDraft({
-        category: (ai && ai.kind) ? ai.kind : '高速代',
-        amount:   (ai && ai.amount) ? ai.amount : '',
-        memo:     (ai && ai.store) ? ai.store : '',
-        image:    b64,
-        aiAmount: (ai && ai.amount) ? ai.amount : ''
+  S.queue=[];
+  setSheet('<h3>読み取り中</h3>'+closeBtn(),
+    '<div class="center"><div class="spin"></div><span id="prog">1 / '+files.length+' 枚目を読み取っています…</span></div>');
+  openSheet();
+
+  var i=0;
+  function next(){
+    if(i>=files.length){ showQueue(); return; }
+    var el=document.getElementById('prog');
+    if(el) el.textContent = (i+1)+' / '+files.length+' 枚目を読み取っています…';
+    toJpegBase64(files[i]).then(function(b64){
+      return api('apiReadReceipt',{idToken:S.idToken, imageBase64:b64}).then(function(r){
+        var rc = (r && r.ok && r.receipts && r.receipts.length) ? r.receipts : [null];
+        rc.forEach(function(a){
+          S.queue.push({
+            date: (a && a.date && a.date<=S.today) ? a.date : (S.day||S.today),
+            clinic: S.defClinic || (S.emp.clinic||''),
+            category: (a && a.kind) ? a.kind : 'その他',
+            amount: (a && a.amount) ? a.amount : '',
+            aiAmount: (a && a.amount) ? a.amount : '',
+            memo: (a && a.store) ? a.store : '',
+            image: b64, km:'', from:'', to:'', trip:'', ok:false
+          });
+        });
       });
-      showForm(ai ? (ai.amount ? '読み取りました。内容をご確認ください。'
-                               : '金額が読み取れませんでした。入力してください。')
-                  : ((r && r.note) ? r.note : '自動読み取りができませんでした。'));
-    });
-  }).catch(function(e){
-    msg.className='msg err';
-    msg.textContent='画像を処理できませんでした（'+(e && e.message ? e.message : e)+'）。'+
-                    '「手入力」から登録してください。';
-  });
+    }).catch(function(e){
+      S.queue.push({ date:S.day||S.today, clinic:S.defClinic||(S.emp.clinic||''),
+        category:'その他', amount:'', aiAmount:'', memo:'', image:'',
+        km:'', from:'', to:'', trip:'', ok:false,
+        err:(e&&e.message?e.message:'読み取り失敗') });
+    }).then(function(){ i++; next(); });
+  }
+  next();
 }
 
-/** 画像をJPEGのbase64に変換する。失敗時は元ファイルをそのまま使う */
-function toJpegBase64(file){
-  return shrink(file, 1400, 0.75).catch(function(){ return rawBase64(file); })
-    .then(function(b64){
-      if (b64.length > 4000000) throw new Error('画像サイズが大きすぎます');
-      return b64;
-    });
+function showQueue(){
+  var bar='<h3>内容の確認</h3><span class="rt">'+S.queue.length+'件</span>'+closeBtn();
+  var b='';
+  S.queue.forEach(function(q,idx){
+    var need = !(parseInt(q.amount,10)>0);
+    b+='<div class="card '+(q.ok?'done':'')+'">'+
+       '<div class="top">'+
+         (q.image?'<img class="thumb" src="data:image/jpeg;base64,'+q.image+'">':'')+
+         '<div style="flex:1 1 auto;min-width:0">'+
+           '<div class="cat">'+esc(q.category)+'</div>'+
+           '<div class="sub">'+md(q.date)+'（'+wdName(q.date)+'）　'+esc(q.clinic)+'</div>'+
+         '</div>'+
+         '<div class="amt2">'+(need?'—':yen(q.amount))+'</div>'+
+       '</div>'+
+       (q.err?'<div class="msg err">'+esc(q.err)+'</div>':'')+
+       (need&&!q.err?'<div class="msg err">金額が読めませんでした。「直す」から入力してください。</div>':'')+
+       '<div class="row2">'+
+         '<button class="ok" onclick="toggleOk('+idx+')" '+(need?'disabled':'')+'>'+
+           ico('check')+(q.ok?'確認済み':'OK')+'</button>'+
+         '<button class="fix" onclick="fixQueue('+idx+')">直す</button>'+
+       '</div></div>';
+  });
+  var okCount = S.queue.filter(function(q){return q.ok;}).length;
+  b+='<div class="stick"><button class="save" id="batchBtn" onclick="saveQueue()" '+
+     (okCount?'':'disabled')+'>'+okCount+'件を保存する</button>'+
+     '<button class="del" onclick="closeSheet()">やめる</button></div>';
+  setSheet(bar,b);
 }
-function shrink(file, max, q){
-  return new Promise(function(res, rej){
-    var url = URL.createObjectURL(file), img = new Image();
-    var done = false;
-    var t = setTimeout(function(){ if(!done){ done=true; URL.revokeObjectURL(url); rej(new Error('タイムアウト')); } }, 12000);
-    img.onload = function(){
-      if (done) return; done = true; clearTimeout(t);
+function toggleOk(i){ S.queue[i].ok = !S.queue[i].ok; showQueue(); }
+function fixQueue(i){
+  S.draft = JSON.parse(JSON.stringify(S.queue[i]));
+  S.draft.qi = i; S.draft.id='';
+  showForm('');
+}
+function saveQueue(){
+  var list = S.queue.filter(function(q){ return q.ok; });
+  if(!list.length) return;
+  var btn=document.getElementById('batchBtn');
+  btn.disabled=true; btn.textContent='保存しています…';
+  api('apiSubmitBatch',{idToken:S.idToken, items:list.map(function(q){
+    return { date:q.date, clinic:q.clinic, category:q.category, amount:q.amount,
+             km:q.km, from:q.from, to:q.to, trip:q.trip, memo:q.memo,
+             imageBase64:q.image, aiAmount:q.aiAmount };
+  })}).then(function(r){
+    if(!r.ok){ btn.disabled=false; btn.textContent='保存する'; alert(r.error); return; }
+    S.queue=[]; S.items=r.items||S.items; S.cache[S.period]=S.items;
+    S.view=S.period; renderCal(); closeSheet();
+  }).catch(function(){ btn.disabled=false; btn.textContent='保存する';
+    alert('通信に失敗しました。'); });
+}
+
+/* --- 画像変換 --- */
+function toJpegBase64(file){
+  return shrink(file,1400,0.75).catch(function(){ return rawBase64(file); })
+    .then(function(b64){ if(b64.length>4000000) throw new Error('画像サイズが大きすぎます'); return b64; });
+}
+function shrink(file,max,q){
+  return new Promise(function(res,rej){
+    var url=URL.createObjectURL(file), img=new Image(), done=false;
+    var t=setTimeout(function(){ if(!done){done=true;URL.revokeObjectURL(url);rej(new Error('タイムアウト'));} },12000);
+    img.onload=function(){
+      if(done)return; done=true; clearTimeout(t);
       try{
-        var w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
-        var s=Math.min(1, max/Math.max(w,h));
+        var w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+        var s=Math.min(1,max/Math.max(w,h));
         var cv=document.createElement('canvas');
         cv.width=Math.max(1,Math.round(w*s)); cv.height=Math.max(1,Math.round(h*s));
         cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
-        var out = cv.toDataURL('image/jpeg', q).split(',')[1];
+        var out=cv.toDataURL('image/jpeg',q).split(',')[1];
         URL.revokeObjectURL(url);
-        if (!out || out.length < 100) rej(new Error('変換に失敗')); else res(out);
+        if(!out||out.length<100) rej(new Error('変換に失敗')); else res(out);
       }catch(err){ URL.revokeObjectURL(url); rej(err); }
     };
-    img.onerror = function(){ if(done) return; done=true; clearTimeout(t);
+    img.onerror=function(){ if(done)return; done=true; clearTimeout(t);
       URL.revokeObjectURL(url); rej(new Error('画像を開けません')); };
-    img.src = url;
+    img.src=url;
   });
 }
 function rawBase64(file){
-  return new Promise(function(res, rej){
-    var fr = new FileReader();
-    fr.onload = function(){ var s=String(fr.result); var i=s.indexOf(',');
-      i>=0 ? res(s.slice(i+1)) : rej(new Error('読み込み失敗')); };
-    fr.onerror = function(){ rej(new Error('読み込み失敗')); };
+  return new Promise(function(res,rej){
+    var fr=new FileReader();
+    fr.onload=function(){ var s=String(fr.result),i=s.indexOf(',');
+      i>=0?res(s.slice(i+1)):rej(new Error('読み込み失敗')); };
+    fr.onerror=function(){ rej(new Error('読み込み失敗')); };
     fr.readAsDataURL(file);
   });
 }
 
-/* --- ガソリン・手入力 --- */
-function startGas(){ newDraft({category:'ガソリン', trip:'業務'}); showForm(''); }
+/* =========================================================
+   単票フォーム
+   ========================================================= */
+function startGas(){ newDraft({category:'ガソリン',trip:'業務'}); showGasPick(); }
 function startManual(){ newDraft({category:'その他'}); showForm(''); }
-
 function newDraft(o){
-  S.draft = {
-    id:'', date:S.day, clinic:(S.lastClinic || (S.emp.clinic||'')),
+  S.draft={ id:'', qi:-1, date:S.day||S.today, clinic:S.defClinic||(S.emp.clinic||''),
     category:o.category||'', amount:o.amount||'', km:'', from:'', to:'',
-    trip:o.trip||'', memo:o.memo||'', image:o.image||'', aiAmount:o.aiAmount||''
-  };
+    trip:o.trip||'', memo:'', image:'', aiAmount:'' };
 }
 
-/* --- 既存明細の編集 --- */
-function editItem(id){
-  var x = null;
-  S.items.forEach(function(i){ if(i.id===id) x=i; });
-  if (!x) return;
-  S.draft = { id:x.id, date:x.date, clinic:x.clinic, category:x.category,
-              amount:x.amount, km:x.km, from:x.from, to:x.to, trip:x.trip,
-              memo:x.memo, image:'', aiAmount:'' };
+/* よく使うルートから選ぶ */
+function showGasPick(){
+  if(!S.routes.length){ showForm(''); return; }
+  var bar=backBtn('chooseType()')+'<h3>よく使うルート</h3>'+closeBtn();
+  var b='';
+  S.routes.forEach(function(r,i){
+    b+='<button class="rchip" onclick="useRoute('+i+')">'+esc(r.from)+' → '+esc(r.to)+
+       '<span>　'+esc(r.km)+'km・'+yen(Math.round(Number(r.km)*S.cfg.gasRate))+'円</span></button>';
+  });
+  b+='<button class="add" onclick="showForm(\'\')">'+ico('plus')+'新しい経路を入力</button>';
+  setSheet(bar,b);
+}
+function useRoute(i){
+  var r=S.routes[i];
+  S.draft.from=r.from; S.draft.to=r.to; S.draft.km=r.km; S.draft.trip=r.trip||'業務';
   showForm('');
 }
 
-/* --- 入力フォーム（1画面） --- */
 function showForm(hint){
-  var d = S.draft, isGas = d.category==='ガソリン', edit = !!d.id;
-  var bar = '<button class="back" onclick="'+(edit?'showDay()':'chooseType()')+'">‹ 戻る</button>'+
-            '<h3>'+md(d.date)+'（'+wdName(d.date)+'）'+(edit?' の修正':'')+'</h3>'+
-            '<button class="x" onclick="closeSheet()">✕</button>';
+  var d=S.draft, isGas=d.category==='ガソリン', edit=!!d.id, fromQ=(d.qi>=0);
+  var bar=backBtn(edit?'showDay()':(fromQ?'showQueue()':'chooseType()'))+
+          '<h3>'+md(d.date)+'（'+wdName(d.date)+'）</h3>'+closeBtn();
+  var b='';
+  if(hint) b+='<div class="msg">'+esc(hint)+'</div>';
+  if(d.image) b+='<img class="prev" src="data:image/jpeg;base64,'+d.image+'">';
 
-  var b = '';
-  if (hint) b += '<div class="msg '+(d.amount?'ok':'')+'">'+esc(hint)+'</div>';
-  if (d.image) b += '<img class="prev" src="data:image/jpeg;base64,'+d.image+'" alt="領収書">';
+  b+='<label class="fl">日付</label><input type="date" id="fDate" value="'+esc(d.date)+'" max="'+S.today+'">';
 
-  // 種類
-  b += '<label class="fl">種類</label><div class="chips">';
-  var cats = S.cfg.categories.slice();
-  if (cats.indexOf('ガソリン') < 0) cats.unshift('ガソリン');
+  b+='<label class="fl">種類</label><div class="chips">';
+  var cats=S.cfg.categories.slice();
+  if(cats.indexOf('ガソリン')<0) cats.unshift('ガソリン');
   cats.forEach(function(c){
-    b += '<button class="chip '+(d.category===c?'on':'')+'" onclick="setCat(\'' + c + '\')">'+esc(c)+'</button>';
+    b+='<button class="chip '+(d.category===c?'on':'')+'" onclick="setCat(\'' + c + '\')">'+esc(c)+'</button>';
   });
-  b += '</div>';
+  b+='</div>';
 
-  // 院
-  b += '<label class="fl">所属院</label><select id="fClinic">';
+  b+='<label class="fl">所属院</label><select id="fClinic">';
   S.cfg.clinics.forEach(function(c){
-    b += '<option value="'+esc(c)+'" '+(d.clinic===c?'selected':'')+'>'+esc(c)+'</option>';
-  });
-  b += '</select>';
+    b+='<option value="'+esc(c)+'" '+(d.clinic===c?'selected':'')+'>'+esc(c)+'</option>'; });
+  b+='</select>';
 
-  if (isGas) {
-    b += '<label class="fl">移動区分</label><div class="chips">'+
-      '<button class="chip '+(d.trip==='業務'?'on':'')+'" onclick="setTrip(\'業務\')">業務</button>'+
-      '<button class="chip '+(d.trip==='通勤'?'on':'')+'" onclick="setTrip(\'通勤\')">通勤</button>'+
-      '</div>';
-    b += '<label class="fl">出発地 → 到着地</label>'+
-      '<div style="display:flex;gap:8px">'+
-      '<input type="text" id="fFrom" value="'+esc(d.from)+'" placeholder="自宅">'+
-      '<input type="text" id="fTo" value="'+esc(d.to)+'" placeholder="東生駒院"></div>';
-    b += '<label class="fl">走行距離（km）</label>'+
-      '<input type="number" id="fKm" inputmode="decimal" step="0.1" min="0" value="'+esc(d.km)+'" oninput="calcGas()">'+
-      '<div class="calc">金額 <b id="gasAmt">—</b> 円'+
-      '<span class="note" style="margin-left:8px">1kmあたり '+S.cfg.gasRate+'円</span></div>';
+  if(isGas){
+    b+='<label class="fl">移動区分</label><div class="chips">'+
+       '<button class="chip '+(d.trip==='業務'?'on':'')+'" onclick="setTrip(\'業務\')">業務</button>'+
+       '<button class="chip '+(d.trip==='通勤'?'on':'')+'" onclick="setTrip(\'通勤\')">通勤</button></div>'+
+       '<label class="fl">出発地 → 到着地</label><div style="display:flex;gap:8px">'+
+       '<input type="text" id="fFrom" value="'+esc(d.from)+'" placeholder="自宅">'+
+       '<input type="text" id="fTo" value="'+esc(d.to)+'" placeholder="東生駒院"></div>'+
+       '<label class="fl">走行距離（km）</label>'+
+       '<input type="number" id="fKm" inputmode="decimal" step="0.1" min="0" value="'+esc(d.km)+'" oninput="calcGas()">'+
+       '<div class="calc">金額 <b id="gasAmt">—</b> 円<span class="note" style="margin-left:8px">1kmあたり '+S.cfg.gasRate+'円</span></div>';
   } else {
-    b += '<label class="fl">金額（税込・円）</label>'+
-      '<input type="number" id="fAmt" inputmode="numeric" min="1" value="'+esc(d.amount)+'" placeholder="1204">';
+    b+='<label class="fl">金額（税込・円）</label>'+
+       '<input type="number" id="fAmt" inputmode="numeric" min="1" value="'+esc(d.amount)+'" placeholder="1204">';
   }
 
-  b += '<label class="fl">メモ（任意）</label>'+
-    '<input type="text" id="fMemo" value="'+esc(d.memo)+'" placeholder="店名・内容など">';
-
-  b += '<div class="msg err" id="fMsg" aria-live="polite"></div>';
-  b += '<button class="save" id="saveBtn" onclick="saveDraft(false)">'+(edit?'この内容に修正する':'保存する')+'</button>';
-  b += '<div id="dupBox"></div>';
-  if (edit) b += '<button class="del" onclick="delItem()">この経費を削除する</button>';
-
-  setSheet(bar, b);
-  if (isGas) calcGas();
+  b+='<label class="fl">メモ（任意）</label>'+
+     '<input type="text" id="fMemo" value="'+esc(d.memo)+'" placeholder="店名・内容など">';
+  b+='<div class="msg err" id="fMsg" aria-live="polite"></div>';
+  b+='<button class="save" id="saveBtn" onclick="saveDraft(false)">'+
+     (fromQ?'この内容にする':(edit?'この内容に修正する':'保存する'))+'</button>';
+  b+='<div id="dupBox"></div>';
+  if(edit) b+='<button class="del" onclick="delItem()">'+ico('trash')+' 削除する</button>';
+  setSheet(bar,b);
+  if(isGas) calcGas();
 }
-
 function pullForm(){
-  var d = S.draft;
-  var g = function(id){ var e=document.getElementById(id); return e?e.value:''; };
-  d.clinic = g('fClinic') || d.clinic;
+  var d=S.draft, g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
+  d.date   = g('fDate')||d.date;
+  d.clinic = g('fClinic')||d.clinic;
   d.memo   = g('fMemo');
-  if (d.category==='ガソリン') { d.km = g('fKm'); d.amount=''; }
-  else { d.amount = g('fAmt'); d.km=''; }
+  if(d.category==='ガソリン'){ d.km=g('fKm'); d.from=g('fFrom'); d.to=g('fTo'); d.amount=''; }
+  else { d.amount=g('fAmt'); d.km=''; }
 }
 function setCat(c){ pullForm(); S.draft.category=c; showForm(''); }
 function setTrip(t){ pullForm(); S.draft.trip=t; showForm(''); }
 function calcGas(){
-  var v = parseFloat(document.getElementById('fKm').value);
-  var ok = v>0 && v<=2000;
-  document.getElementById('gasAmt').textContent = ok ? yen(Math.round(v*S.cfg.gasRate)) : '—';
+  var v=parseFloat(document.getElementById('fKm').value), ok=v>0&&v<=2000;
+  document.getElementById('gasAmt').textContent = ok?yen(Math.round(v*S.cfg.gasRate)):'—';
 }
 
 function saveDraft(confirmed){
   pullForm();
-  var d = S.draft, m = document.getElementById('fMsg'), btn = document.getElementById('saveBtn');
+  var d=S.draft, m=document.getElementById('fMsg'), btn=document.getElementById('saveBtn');
   m.textContent='';
+  if(!d.category){ m.textContent='種類を選んでください。'; return; }
+  if(d.category==='ガソリン'){
+    if(!(parseFloat(d.km)>0)){ m.textContent='走行距離を入力してください。'; return; }
+    if(!d.from||!d.to){ m.textContent='出発地と到着地を入力してください。'; return; }
+    if(!d.trip){ m.textContent='移動区分を選んでください。'; return; }
+  } else if(!(parseInt(d.amount,10)>0)){ m.textContent='金額を入力してください。'; return; }
 
-  if (!d.category){ m.textContent='種類を選んでください。'; return; }
-  if (d.category==='ガソリン'){
-    if (!(parseFloat(d.km)>0)){ m.textContent='走行距離を入力してください。'; return; }
-    if (!d.trip){ m.textContent='移動区分を選んでください。'; return; }
-  } else {
-    if (!(parseInt(d.amount,10)>0)){ m.textContent='金額を入力してください。'; return; }
+  // 撮影キューの1件を直しただけなら、保存せずキューに戻す
+  if(d.qi>=0){
+    var q=S.queue[d.qi];
+    ['date','clinic','category','amount','km','from','to','trip','memo'].forEach(function(k){ q[k]=d[k]; });
+    q.ok=true; S.draft=null; showQueue(); return;
   }
 
-  btn.disabled = true; btn.textContent = '保存しています…';
-  var payload = { date:d.date, clinic:d.clinic, category:d.category, amount:d.amount,
-                  km:d.km, from:d.from||document.getElementById('fFrom')&&document.getElementById('fFrom').value||'',
-                  to:d.to||document.getElementById('fTo')&&document.getElementById('fTo').value||'',
-                  trip:d.trip, memo:d.memo, imageBase64:d.image,
-                  aiAmount:d.aiAmount, confirmed:!!confirmed };
-
-  var call = d.id ? api('apiUpdate',{idToken:S.idToken, id:d.id, payload:payload})
-                  : api('apiSubmit',{idToken:S.idToken, payload:payload});
-
+  btn.disabled=true; btn.textContent='保存しています…';
+  var payload={ date:d.date, clinic:d.clinic, category:d.category, amount:d.amount,
+    km:d.km, from:d.from, to:d.to, trip:d.trip, memo:d.memo,
+    imageBase64:d.image, aiAmount:d.aiAmount, confirmed:!!confirmed };
+  var call = d.id ? api('apiUpdate',{idToken:S.idToken,id:d.id,payload:payload})
+                  : api('apiSubmit',{idToken:S.idToken,payload:payload});
   call.then(function(r){
-    if (r.ok){
-      S.lastClinic = d.clinic;
-      if (r.items) { S.items = r.items; afterSave(); }
+    if(r.ok){
+      if(r.items){ S.items=r.items; S.cache[S.period]=S.items; afterSave(); }
       else reload().then(afterSave);
       return;
     }
-    btn.disabled=false; btn.textContent = d.id?'この内容に修正する':'保存する';
-    m.textContent = r.error;
-    if (r.duplicate){
-      document.getElementById('dupBox').innerHTML =
-        '<button class="del" onclick="saveDraft(true)">それでも登録する</button>';
-    }
+    btn.disabled=false; btn.textContent=d.id?'この内容に修正する':'保存する';
+    m.textContent=r.error;
+    if(r.duplicate) document.getElementById('dupBox').innerHTML=
+      '<button class="del" onclick="saveDraft(true)">それでも登録する</button>';
   }).catch(function(){
-    btn.disabled=false; btn.textContent = d.id?'この内容に修正する':'保存する';
+    btn.disabled=false; btn.textContent=d.id?'この内容に修正する':'保存する';
     m.textContent='通信に失敗しました。もう一度お試しください。';
   });
 }
-function afterSave(){ S.draft=null; renderCal(); showDay(); }
+function afterSave(){ S.day=S.draft?S.draft.date:S.day; S.draft=null; renderCal(); showDay(); }
 
+function editItem(id){
+  var x=null; S.items.forEach(function(i){ if(i.id===id) x=i; });
+  if(!x) return;
+  S.draft={ id:x.id, qi:-1, date:x.date, clinic:x.clinic, category:x.category,
+    amount:x.amount, km:x.km, from:x.from, to:x.to, trip:x.trip,
+    memo:x.memo, image:'', aiAmount:'' };
+  showForm('');
+}
 function delItem(){
-  if (!confirm('この経費を削除しますか？')) return;
-  api('apiDelete',{idToken:S.idToken, id:S.draft.id}).then(function(r){
-    if (!r.ok){ document.getElementById('fMsg').textContent = r.error; return; }
-    S.items = r.items || S.items;
-    afterSave();
+  if(!confirm('この経費を削除しますか？')) return;
+  api('apiDelete',{idToken:S.idToken,id:S.draft.id}).then(function(r){
+    if(!r.ok){ document.getElementById('fMsg').textContent=r.error; return; }
+    S.items=r.items||S.items; S.cache[S.period]=S.items; afterSave();
   });
 }
-
-/* --- 前の期間を見る --- */
-function openPrev(){
-  var p = S.period.split('-'), y=Number(p[0]), m=Number(p[1])-1;
-  if (m<1){ m=12; y--; }
-  var prev = y+'-'+('0'+m).slice(-2);
-  api('apiGetMyList',{idToken:S.idToken, period:prev}).then(function(r){
-    if (!r.ok){ alert(r.error); return; }
-    var bar = '<h3>'+esc(r.periodLabel||prev)+' 分</h3><button class="x" onclick="closeSheet()">✕</button>';
-    var b = '';
-    if (!r.items.length) b += '<div class="empty">この期間の登録はありません</div>';
-    else {
-      r.items.forEach(function(x){
-        b += '<div class="item"><div class="ic">'+icon(x.category)+'</div>'+
-             '<div class="tx"><div class="t1">'+md(String(x.date).replace(/\//g,'-'))+'　'+esc(x.category)+'</div>'+
-             '<div class="t2">'+esc(x.clinic||'')+'</div></div>'+
-             '<div class="yen">'+yen(x.amount)+'</div></div>';
-      });
-      b += '<div class="calc" style="margin-top:14px">合計 <b>'+yen(r.total)+'</b> 円</div>';
-    }
-    b += '<p class="note">締め切り済みの期間は修正できません。</p>';
-    setSheet(bar, b); openSheet();
-  });
-}
-
-/* --- 再読み込み --- */
 function reload(){
-  return api('apiGetMyList',{idToken:S.idToken, period:S.period}).then(function(r){
-    if (r.ok) S.items = r.items || [];
+  return api('apiGetMyList',{idToken:S.idToken,period:S.period}).then(function(r){
+    if(r.ok){ S.items=r.items||[]; S.cache[S.period]=S.items; }
   });
 }
 
 /* =========================================================
-   初回連携
+   設定
+   ========================================================= */
+function openSettings(){
+  var bar='<h3>設定</h3>'+closeBtn();
+  var b='<label class="fl">自分の所属院（次回から初期値になります）</label><select id="sClinic">';
+  S.cfg.clinics.forEach(function(c){
+    b+='<option value="'+esc(c)+'" '+(S.defClinic===c?'selected':'')+'>'+esc(c)+'</option>'; });
+  b+='</select><div class="msg ok" id="sMsg" aria-live="polite"></div>'+
+     '<button class="save" onclick="saveSettings()">保存する</button>'+
+     '<p class="note">氏名：'+esc(S.emp.name)+'　従業員ID：'+esc(S.emp.id)+'</p>';
+  setSheet(bar,b); openSheet();
+}
+function saveSettings(){
+  var c=document.getElementById('sClinic').value;
+  api('apiSetDefault',{idToken:S.idToken,clinic:c}).then(function(r){
+    var m=document.getElementById('sMsg');
+    if(!r.ok){ m.className='msg err'; m.textContent=r.error; return; }
+    S.defClinic=c; m.className='msg ok'; m.textContent='保存しました。';
+  });
+}
+
+/* =========================================================
+   初回連携・起動
    ========================================================= */
 function renderLink(){
-  document.getElementById('root').innerHTML =
-    '<div class="hd"><div class="ttl">はじめに</div></div>'+
+  document.getElementById('root').innerHTML=
+    '<div class="hd"><div class="ttl"><b>はじめに</b></div></div>'+
     '<div class="cal" style="padding:18px">'+
     '<p style="color:var(--sub);font-size:15px">最初の1回だけ、ご自身の従業員IDを入力してください。</p>'+
     '<label class="fl">従業員ID</label>'+
@@ -552,40 +672,35 @@ function renderLink(){
     '<button class="save" onclick="doLink()">確認する</button></div>';
 }
 function doLink(){
-  var v = document.getElementById('empId').value.trim();
-  var m = document.getElementById('linkMsg');
-  if (!v){ m.textContent='従業員IDを入力してください。'; return; }
+  var v=document.getElementById('empId').value.trim(), m=document.getElementById('linkMsg');
+  if(!v){ m.textContent='従業員IDを入力してください。'; return; }
   m.className='msg'; m.textContent='確認しています…';
-  api('apiLink',{idToken:S.idToken, employeeId:v}).then(function(r){
-    if (!r.ok){ m.className='msg err'; m.textContent=r.error; return; }
-    S.emp = r.employee; S.lastClinic = r.employee.clinic || '';
+  api('apiLink',{idToken:S.idToken,employeeId:v}).then(function(r){
+    if(!r.ok){ m.className='msg err'; m.textContent=r.error; return; }
+    S.emp=r.employee; S.defClinic=r.employee.clinic||'';
     reload().then(renderCal);
   }).catch(function(){ m.className='msg err'; m.textContent='通信に失敗しました。'; });
 }
 
-/* =========================================================
-   起動
-   ========================================================= */
 function boot(){
   liff.init({liffId:LIFF_ID}).then(function(){
-    if (!liff.isLoggedIn()){ liff.login(); return; }
-    S.idToken = liff.getIDToken();
+    if(!liff.isLoggedIn()){ liff.login(); return; }
+    S.idToken=liff.getIDToken();
     return api('apiGetProfile',{idToken:S.idToken});
   }).then(function(r){
-    if (!r) return;
-    if (!r.ok){ fail(r.error||'読み込みに失敗しました。'); return; }
-    S.cfg=r.config; S.period=r.period; S.periodLabel=r.periodLabel;
+    if(!r) return;
+    if(!r.ok){ fail(r.error||'読み込みに失敗しました。'); return; }
+    S.cfg=r.config; S.period=r.period; S.view=r.period; S.periodLabel=r.periodLabel;
     S.dates=r.dates; S.today=r.today; S.items=r.items||[];
-    if (r.linked){ S.emp=r.employee; S.lastClinic=r.employee.clinic||''; renderCal(); }
-    else renderLink();
-  }).catch(function(){
-    fail('初期化に失敗しました。LINEアプリから開き直してください。');
-  });
+    S.routes=r.routes||[]; S.defClinic=r.defaultClinic||'';
+    S.cache[S.period]=S.items;
+    if(r.linked){ S.emp=r.employee; renderCal(); } else renderLink();
+  }).catch(function(){ fail('初期化に失敗しました。LINEアプリから開き直してください。'); });
 }
 function fail(msg){
-  document.getElementById('root').innerHTML =
+  document.getElementById('root').innerHTML=
     '<div class="center"><p class="msg err">'+esc(msg)+'</p>'+
-    '<button class="pbtn" onclick="location.reload()">読み込み直す</button></div>';
+    '<button class="nav" onclick="location.reload()">読み込み直す</button></div>';
 }
 boot();
 </script>
