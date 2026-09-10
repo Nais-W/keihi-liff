@@ -79,8 +79,10 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
                overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sheet .bar .rt{font-size:16px;font-weight:700;flex:0 0 auto;
                 font-variant-numeric:tabular-nums;line-height:1.3}
-.sheet .body{overflow-y:auto;overflow-x:hidden;padding:12px 14px calc(16px + env(safe-area-inset-bottom));
-            flex:1 1 auto;overscroll-behavior:contain;width:100%}
+.sheet .body{overflow-y:auto;overflow-x:hidden;padding:12px 14px 14px;
+            flex:1 1 auto;overscroll-behavior:contain;width:100%;min-height:0}
+.sheet .foot2{flex:0 0 auto;border-top:1px solid var(--line);background:#fff;
+             padding:12px 14px calc(12px + env(safe-area-inset-bottom));display:none}
 .x,.back{min-width:44px;min-height:40px;border:none;background:none;color:var(--sub);
          display:flex;align-items:center;justify-content:center}
 
@@ -94,7 +96,9 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
 .item .t1{font-size:15px;font-weight:600;line-height:1.3}
 .item .t2{font-size:12px;color:var(--sub);line-height:1.35;margin-top:1px;
           white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.item .yen{font-size:16px;font-weight:700;flex:0 0 auto;font-variant-numeric:tabular-nums;line-height:1.2}
+.item .yen{font-size:16px;font-weight:700;flex:0 0 auto;font-variant-numeric:tabular-nums;
+           line-height:1.2;white-space:nowrap}
+.item .yen .cur{font-size:11px;font-weight:600;margin-left:2px;color:var(--sub)}
 .empty{text-align:center;color:var(--sub);font-size:14px;padding:20px 0}
 
 /* 確認カード（撮影後） */
@@ -109,24 +113,22 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
 .card .sub{font-size:12px;color:var(--sub);line-height:1.35;margin:2px 0 0;
            overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card .amt2{font-size:20px;font-weight:700;flex:0 0 auto;line-height:1.2;
-            font-variant-numeric:tabular-nums}
+            font-variant-numeric:tabular-nums;white-space:nowrap}
+.card .amt2 .cur{font-size:12px;font-weight:600;margin-left:2px;color:var(--sub)}
 .card .row2{display:flex;gap:8px;align-items:stretch}
-.card .ok{flex:1 1 auto;min-height:46px;border:none;border-radius:11px;background:var(--green);
-          color:#fff;font-weight:700;display:inline-flex;align-items:center;justify-content:center;
-          gap:6px;line-height:1;padding:0}
-.card .ok svg.i{width:19px;height:19px;stroke-width:2.2}
-.card .ok:disabled{background:#dfe4e6;color:#98a1a6}
-.card .fix{min-height:46px;padding:0 16px;border:1px solid var(--line);border-radius:11px;
-           background:#fff;display:inline-flex;align-items:center;justify-content:center;line-height:1}
+.card .ok{flex:1 1 auto;width:auto;min-height:46px;border:none;background:var(--green);
+          color:#fff;font-weight:700;border-radius:11px}
+.card .ok svg.i{width:19px;height:19px;stroke-width:2.1}
+.card .ok:disabled{background:#e6eaec;color:#98a1a6}
+.card .fix{width:auto;flex:0 0 auto;min-height:46px;padding:0 16px;border-radius:11px}
 .card .fix.del2{padding:0 13px;color:var(--red);border-color:#f0c3bf}
+.card .fix.del2 svg.i{width:19px;height:19px}
 .card.done .ok{background:#d8f2e2;color:#04913f}
 .alert{font-size:13px;line-height:1.45;color:var(--red);background:#fdf1f0;border-radius:9px;
        padding:8px 10px;margin-bottom:9px;word-break:break-word;overflow-wrap:anywhere}
-.selall{display:flex;width:100%;min-height:46px;border:1px solid var(--line);border-radius:11px;
-        background:#fff;align-items:center;justify-content:center;gap:7px;font-size:15px;
-        font-weight:600;margin-bottom:12px;line-height:1}
+.selall{font-size:15px;font-weight:600;margin-bottom:8px}
 .selall.on{border-color:var(--green);background:#eafaf1;color:#04913f}
-.selall svg.i{width:19px;height:19px;stroke-width:2.1}
+.selall svg.i{width:20px;height:20px;stroke-width:1.9}
 
 /* スワイプで削除 */
 .swipe{position:relative;overflow:hidden;background:var(--red)}
@@ -143,13 +145,19 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
 .shot .rm{position:absolute;top:3px;right:3px;width:26px;height:26px;border:none;border-radius:50%;
           background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;padding:0}
 .shot .rm svg.i{width:15px;height:15px;stroke-width:2.4}
-.stick{position:sticky;bottom:0;left:0;right:0;background:#fff;padding-top:10px;
-       box-shadow:0 -8px 12px -8px rgba(0,0,0,.12);max-width:100%}
+
+/* ボタンの共通土台。アイコンと文字の縦位置ずれを構造的に防ぐ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+     line-height:1;font-family:inherit;font-size:16px;border-radius:12px;
+     border:1px solid var(--line);background:#fff;color:var(--ink);
+     min-height:48px;padding:0 14px;width:100%;text-align:center}
+.btn svg.i{flex:0 0 auto}
+.btn > span{display:inline-block;line-height:1}
+.btn:disabled{opacity:1;color:#98a1a6}
 
 /* 入力パーツ */
-.add{width:100%;min-height:50px;border:1px dashed var(--green);border-radius:12px;background:#f2fbf5;
-     color:var(--green);font-weight:700;font-size:15px;margin-top:12px;
-     display:flex;align-items:center;justify-content:center;gap:7px;line-height:1}
+.add{min-height:50px;border:1px dashed var(--green);background:#f2fbf5;
+     color:var(--green);font-weight:700;font-size:15px;margin-top:12px}
 .big{width:100%;min-height:56px;border:1px solid var(--line);border-radius:12px;background:#fff;
      display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:8px;
      text-align:left;font-size:16px;line-height:1.35}
@@ -169,11 +177,12 @@ select{width:100%;padding:12px;font-size:17px;border:1px solid var(--line);borde
 .rchip{width:100%;text-align:left;padding:11px 13px;min-height:48px;border:1px solid var(--line);
        border-radius:11px;background:#fff;margin-bottom:7px;font-size:15px}
 .rchip span{color:var(--sub);font-size:13px}
-.save{width:100%;min-height:52px;border:none;border-radius:12px;background:var(--green);color:#fff;
-      font-weight:700;font-size:17px;margin-top:16px}
-.save:disabled{background:#b8e6c9}
-.del{width:100%;min-height:46px;border:1px solid #f0c3bf;border-radius:12px;background:#fff;
-     color:var(--red);font-size:15px;margin-top:10px}
+.save{min-height:52px;border:none;background:var(--green);color:#fff;font-weight:700;font-size:17px}
+.save:disabled{background:#c9e8d5;color:#fff}
+.del{min-height:46px;border-color:#f0c3bf;color:var(--red);font-size:15px;margin-top:8px}
+.del svg.i{width:19px;height:19px}
+.line{border-color:var(--green);color:var(--green);font-weight:700;margin-bottom:8px}
+.line2{margin-bottom:8px}
 .calc{background:var(--soft);border-radius:11px;padding:10px 13px;margin-top:11px;font-size:14px}
 .calc b{font-size:21px}
 .msg{font-size:14px;margin:9px 0;min-height:1.1em;word-break:break-word;overflow-wrap:anywhere}
@@ -203,6 +212,7 @@ select{width:100%;padding:12px;font-size:17px;border:1px solid var(--line);borde
 <div class="sheet" id="sheet">
   <div class="bar" id="sheetBar"></div>
   <div class="body" id="sheetBody"></div>
+  <div class="foot2" id="sheetFoot"></div>
 </div>
 
 <script>
@@ -219,9 +229,9 @@ var S = {
   view:'',                 // 表示中の期間
   cache:{},                // 期間 → 明細
   day:'', draft:null,
-  queue:[],                // 撮影して確認待ちの明細
+  queue:[], reqId:'',      // 撮影して確認待ちの明細と、その送信キー
   shots:[],                // 撮影済みでまだ読み取っていない画像
-  dragging:false, dirty:false   // スワイプ中の再描画を止めるための印
+  dragging:false, dirty:false, animating:false  // スワイプ中の再描画・多重操作を防ぐ印
 };
 
 /* ---------- アイコン（iOS風の線画・自前SVG） ---------- */
@@ -233,6 +243,8 @@ var IC = {
   doc:'<path d="M6.5 3.5h7l4.5 4.5v12a1 1 0 0 1-1 1h-10.5a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z"/><path d="M13.5 3.5V8h4.5M9 13h6M9 16.5h4"/>',
   pencil:'<path d="M4 20h4l10-10a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M14.5 6.5 17.5 9.5"/>',
   check:'<path d="M5 12.5 10 17.5 19 7"/>',
+  square:'<rect x="4" y="4" width="16" height="16" rx="4.5"/>',
+  checkbox:'<rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M8.3 12.2 11 14.9 15.8 9.4"/>',
   left:'<path d="M14.5 5 8 12l6.5 7"/>',
   right:'<path d="M9.5 5 16 12l-6.5 7"/>',
   gear:'<circle cx="12" cy="12" r="2.9"/><path d="M19.1 13.6a7.6 7.6 0 0 0 0-3.2l1.8-1.3-1.8-3.1-2.1.8a7.6 7.6 0 0 0-2.8-1.6L13.9 3h-3.8l-.3 2.2a7.6 7.6 0 0 0-2.8 1.6l-2.1-.8-1.8 3.1 1.8 1.3a7.6 7.6 0 0 0 0 3.2l-1.8 1.3 1.8 3.1 2.1-.8a7.6 7.6 0 0 0 2.8 1.6l.3 2.2h3.8l.3-2.2a7.6 7.6 0 0 0 2.8-1.6l2.1.8 1.8-3.1z"/>',
@@ -246,7 +258,7 @@ function catIcon(c){
 }
 
 /* ---------- 小道具 ---------- */
-function api(fn,args,ms){
+function api(fn,args,ms,retry){
   var timeout = new Promise(function(_,rej){
     setTimeout(function(){ rej(new Error('サーバーの応答がありません（'+((ms||60000)/1000)+'秒）')); }, ms||60000);
   });
@@ -258,11 +270,27 @@ function api(fn,args,ms){
       return r.text();
     })
     .then(function(txt){
-      try { return JSON.parse(txt); }
-      catch(e){ throw new Error('応答を解釈できません：'+txt.slice(0,80)); }
+      var j;
+      try { j = JSON.parse(txt); }
+      catch(e){
+        // GASがPOSTを転送する際、まれにGETとして届く。1度だけ送り直す。
+        if(!retry) return api(fn,args,ms,true);
+        throw new Error('応答を解釈できません：'+txt.slice(0,60));
+      }
+      if(j && j.getFallback){
+        if(!retry) return api(fn,args,ms,true);
+        throw new Error('リクエストが正しく届きませんでした。もう一度お試しください。');
+      }
+      return j;
     });
   return Promise.race([call, timeout]);
 }
+
+/** 送信ごとの一意キー。通信をやり直しても二重登録されないようにする */
+function newReqId(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function yen(n){ return Number(n||0).toLocaleString('ja-JP'); }
@@ -347,48 +375,67 @@ function gridHtml(p){
 function bindSwipe(){
   var stage=document.getElementById('stage'), track=document.getElementById('track');
   if(!stage||!track) return;
-  var w=stage.clientWidth, x0=0,y0=0,dx=0,dragging=false,decided=false;
+  var w=stage.clientWidth, x0=0,y0=0,t0=0,dx=0,dragging=false,decided=false;
 
-  function setX(px,anim){
-    track.style.transition = anim ? 'transform .22s ease-out' : 'none';
+  function setX(px,ms){
+    track.style.transition = ms ? ('transform '+ms+'ms cubic-bezier(.22,.61,.36,1)') : 'none';
     track.style.transform  = 'translateX(' + (-w + px) + 'px)';
   }
-  setX(0,false);
+  setX(0,0);
 
   stage.addEventListener('touchstart',function(e){
+    if(S.animating) return;              // 切り替え中は受け付けない（飛ぶのを防ぐ）
     if(e.touches.length!==1) return;
-    w=stage.clientWidth; x0=e.touches[0].clientX; y0=e.touches[0].clientY;
-    dx=0; dragging=true; decided=false; S.dragging=true; setX(0,false);
+    w=stage.clientWidth;
+    x0=e.touches[0].clientX; y0=e.touches[0].clientY; t0=Date.now();
+    dx=0; dragging=true; decided=false; S.dragging=true;
+    setX(0,0);
   },{passive:true});
 
   stage.addEventListener('touchmove',function(e){
     if(!dragging) return;
     var mx=e.touches[0].clientX-x0, my=e.touches[0].clientY-y0;
     if(!decided){
-      if(Math.abs(mx)<6 && Math.abs(my)<6) return;
+      if(Math.abs(mx)<8 && Math.abs(my)<8) return;
       decided=true;
-      if(Math.abs(my)>Math.abs(mx)){ dragging=false; return; }   // 縦スクロール優先
+      if(Math.abs(my)>Math.abs(mx)){ dragging=false; S.dragging=false; return; }
     }
     if(e.cancelable) e.preventDefault();
-    // 未来側へは引っ張れないよう抵抗をかける
-    if(mx<0 && shiftPeriod(S.view,1) > S.period) mx = mx/4;
-    dx=mx; setX(dx,false);
+    if(mx<0 && shiftPeriod(S.view,1) > S.period) mx = mx/4;   // 未来側は引っ張れない
+    dx=mx; setX(dx,0);
   },{passive:false});
 
-  stage.addEventListener('touchend',function(){
-    if(!dragging){ S.dragging=false; return; }
+  function finish(){
+    if(!dragging) return;
     dragging=false;
-    var go = Math.abs(dx) > w*0.18 ? (dx<0 ? 1 : -1) : 0;
+    var dt = Math.max(1, Date.now()-t0);
+    var speed = Math.abs(dx)/dt;                       // 速く払ったら距離が短くても切り替える
+    var go = (Math.abs(dx) > w*0.25 || speed > 0.45) ? (dx<0 ? 1 : -1) : 0;
     if(go===1 && shiftPeriod(S.view,1) > S.period) go=0;
+
     if(go===0){
-      S.dragging=false; setX(0,true);
+      S.dragging=false;
+      setX(0, Math.min(260, Math.max(140, Math.abs(dx))));
       if(S.dirty){ S.dirty=false; paintAmounts(); }
       return;
     }
-    setX(go===1 ? -w : w, true);
-    // アニメーションが終わってから中身を差し替える（途中で描き直すとガタつく）
-    setTimeout(function(){ S.dragging=false; S.dirty=false; goPeriod(go); }, 230);
-  },{passive:true});
+
+    // 残りの距離に応じて時間を決めると、速さが自然につながる
+    var remain = w - Math.abs(dx);
+    var ms = Math.min(300, Math.max(120, Math.round(remain / Math.max(0.5, speed))));
+    S.animating = true;
+    setX(go===1 ? -w : w, ms);
+    setTimeout(function(){
+      S.dragging=false; S.dirty=false;
+      goPeriod(go);
+      S.animating=false;
+    }, ms + 20);
+  }
+  stage.addEventListener('touchend', finish, {passive:true});
+  stage.addEventListener('touchcancel', function(){
+    if(!dragging) return;
+    dragging=false; S.dragging=false; setX(0,180);
+  }, {passive:true});
 }
 function goPeriod(n){
   var next = shiftPeriod(S.view, n);
@@ -454,10 +501,17 @@ function openSheet(){ document.getElementById('mask').classList.add('on');
   document.getElementById('sheet').classList.add('on'); }
 function closeSheet(){ document.getElementById('mask').classList.remove('on');
   document.getElementById('sheet').classList.remove('on'); S.draft=null; }
-function setSheet(bar,body){
-  document.getElementById('sheetBar').innerHTML=bar;
-  document.getElementById('sheetBody').innerHTML=body;
-  document.getElementById('sheetBody').scrollTop=0;
+/**
+ * シートを描く。footを渡すと画面下に固定される欄になり、
+ * 本文がその下に回り込むことがなくなる。
+ */
+function setSheet(bar, body, foot){
+  document.getElementById('sheetBar').innerHTML = bar;
+  document.getElementById('sheetBody').innerHTML = body;
+  document.getElementById('sheetBody').scrollTop = 0;
+  var f = document.getElementById('sheetFoot');
+  f.innerHTML = foot || '';
+  f.style.display = foot ? 'block' : 'none';
 }
 /* 画面下に短く出る通知 */
 function toast(msg){
@@ -489,12 +543,14 @@ function showDay(){
        '<div class="ic">'+ico(catIcon(x.category))+'</div>'+
        '<div class="tx"><div class="t1">'+esc(x.category)+'</div>'+
        '<div class="t2">'+esc(sub)+'</div></div>'+
-       '<div class="yen">'+yen(x.amount)+'</div></div></div>';
+       '<div class="yen">'+yen(x.amount)+'<span class="cur">円</span></div></div></div>';
   });
   if (locked) b+='<p class="note">締め切り済みの期間は修正できません。</p>';
   else if (d > S.today) b+='<p class="note">未来の日付には登録できません。</p>';
-  else b+='<button class="add" onclick="chooseType()">'+ico('plus')+'経費を追加</button>';
-  setSheet(bar,b);
+  var foot = (!locked && d <= S.today)
+    ? '<button class="btn add" onclick="chooseType()">'+ico('plus')+'<span>経費を追加</span></button>'
+    : '';
+  setSheet(bar,b,foot);
   if(!locked) bindSwipeRows();
 }
 
@@ -594,15 +650,14 @@ function showShots(){
   } else {
     b+='<div class="empty">下のボタンから撮影してください。<br>1枚に複数のレシートが写っていても読み取れます。</div>';
   }
-  b+='<div class="stick">'+
-     '<button class="big" style="justify-content:center;border-color:var(--green);color:var(--green);font-weight:700;margin-bottom:8px"'+
-       ' onclick="document.getElementById(\'cam\').click()">'+ico('camera')+
-       (n?'　もう1枚撮る':'　カメラで撮る')+'</button>'+
-     '<button class="big" style="justify-content:center;margin-bottom:8px"'+
-       ' onclick="document.getElementById(\'lib\').click()">'+ico('doc')+'　写真から選ぶ（複数可）</button>'+
-     '<button class="save" style="margin-top:0" onclick="readShots()" '+(n?'':'disabled')+'>'+
-       (n? n+'枚を読み取る' : '読み取る')+'</button></div>';
-  setSheet(bar,b);
+  var foot =
+     '<button class="btn line" onclick="document.getElementById(\'cam\').click()">'+
+       ico('camera')+'<span>'+(n?'もう1枚撮る':'カメラで撮る')+'</span></button>'+
+     '<button class="btn line2" onclick="document.getElementById(\'lib\').click()">'+
+       ico('doc')+'<span>写真から選ぶ（複数可）</span></button>'+
+     '<button class="btn save" onclick="readShots()" '+(n?'':'disabled')+'>'+
+       '<span>'+(n? n+'枚を読み取る' : '読み取る')+'</span></button>';
+  setSheet(bar,b,foot);
 }
 function rmShot(i){ S.shots.splice(i,1); showShots(); }
 
@@ -657,8 +712,8 @@ function readShots(){
     S.shots=shots;
     setSheet('<h3>読み取りに失敗</h3>'+closeBtn(),
       '<div class="alert">'+esc(e&&e.message?e.message:e)+'</div>'+
-      '<button class="save" onclick="readShots()">もう一度読み取る</button>'+
-      '<button class="del" onclick="showShots()">写真の画面に戻る</button>');
+      '', '<button class="btn save" onclick="readShots()"><span>もう一度読み取る</span></button>'+
+      '<button class="btn del" onclick="showShots()"><span>写真の画面に戻る</span></button>');
   });
 }
 
@@ -685,12 +740,6 @@ function showQueue(){
   var bar = '<h3>内容の確認</h3><span class="rt">'+S.queue.length+'件</span>'+closeBtn();
   var b = '';
 
-  if (canCount > 1) {
-    var allOn = (okCount === canCount);
-    b += '<button class="selall'+(allOn?' on':'')+'" onclick="toggleAll()">'+
-         ico(allOn?'check':'plus')+(allOn?'すべて解除':'すべて選ぶ')+'</button>';
-  }
-
   S.queue.forEach(function(q,idx){
     var need = !(parseInt(q.amount,10) > 0);
     var block = need || !!q.dup;
@@ -701,23 +750,30 @@ function showQueue(){
              '<div class="cat">'+esc(q.category)+'</div>'+
              '<div class="sub">'+md(q.date)+'（'+wdName(q.date)+'）　'+esc(q.clinic)+'</div>'+
            '</div>'+
-           '<div class="amt2">'+(need?'—':yen(q.amount))+'</div>'+
+           '<div class="amt2">'+(need?'—':yen(q.amount))+'<span class="cur">円</span></div>'+
          '</div>'+
          (q.err ? '<div class="alert">'+esc(q.err)+'</div>' : '')+
          (q.dup ? '<div class="alert">同じ内容が既にあります（'+esc(q.dup)+'）。登録しません。</div>' : '')+
          (need && !q.err ? '<div class="alert">金額が読めませんでした。「直す」から入力してください。</div>' : '')+
          '<div class="row2">'+
-           '<button class="ok" onclick="toggleOk('+idx+')" '+(block?'disabled':'')+'>'+
-             ico('check')+'<span>'+(q.ok?'確認済み':'OK')+'</span></button>'+
-           '<button class="fix" onclick="fixQueue('+idx+')">直す</button>'+
-           '<button class="fix del2" onclick="dropQueue('+idx+')">'+ico('trash')+'</button>'+
+           '<button class="btn ok" onclick="toggleOk('+idx+')" '+(block?'disabled':'')+'>'+
+             ico(q.ok?'checkbox':'square')+'<span>'+(q.ok?'確認済み':'OK')+'</span></button>'+
+           '<button class="btn fix" onclick="fixQueue('+idx+')"><span>直す</span></button>'+
+           '<button class="btn fix del2" onclick="dropQueue('+idx+')">'+ico('trash')+'</button>'+
          '</div></div>';
   });
 
-  b += '<div class="stick"><button class="save" id="batchBtn" onclick="saveQueue()" '+
-       (okCount?'':'disabled')+'>'+(okCount? okCount+'件を保存する' : '保存する')+'</button>'+
-       '<button class="del" onclick="closeSheet()">やめる</button></div>';
-  setSheet(bar,b);
+  var foot = '';
+  if (canCount > 1) {
+    var allOn = (okCount === canCount);
+    foot += '<button class="btn selall'+(allOn?' on':'')+'" onclick="toggleAll()">'+
+            ico(allOn?'checkbox':'square')+'<span>'+(allOn?'すべて解除':'すべて選ぶ')+'</span></button>';
+  }
+  foot += '<button class="btn save" id="batchBtn" onclick="saveQueue()" '+
+          (okCount?'':'disabled')+'><span>'+(okCount? okCount+'件を保存する' : '保存する')+'</span></button>'+
+          '<button class="btn del" onclick="closeSheet()"><span>やめる</span></button>';
+
+  setSheet(bar, b, foot);
 }
 function toggleOk(i){ S.queue[i].ok = !S.queue[i].ok; showQueue(); }
 function toggleAll(){
@@ -737,13 +793,14 @@ function saveQueue(){
   if(!list.length) return;
   var btn=document.getElementById('batchBtn');
   btn.disabled=true; btn.textContent='保存しています…';
-  api('apiSubmitBatch',{idToken:S.idToken, items:list.map(function(q){
+  if(!S.reqId) S.reqId = newReqId();
+  api('apiSubmitBatch',{idToken:S.idToken, reqId:S.reqId, items:list.map(function(q){
     return { date:q.date, clinic:q.clinic, category:q.category, amount:q.amount,
              km:q.km, from:q.from, to:q.to, trip:q.trip, memo:q.memo,
              imageBase64:q.image, aiAmount:q.aiAmount };
   })}).then(function(r){
     if(!r.ok){ btn.disabled=false; btn.textContent='保存する'; alert(r.error); return; }
-    S.queue=[]; S.items=r.items||S.items; S.cache[S.period]=S.items;
+    S.reqId=''; S.queue=[]; S.items=r.items||S.items; S.cache[S.period]=S.items;
     S.view=S.period; renderCal(); closeSheet();
     toast(r.saved + '件を登録しました' + (r.skipped ? '（重複など' + r.skipped + '件は除外）' : ''));
   }).catch(function(){ btn.disabled=false; btn.textContent='保存する';
@@ -807,8 +864,8 @@ function showGasPick(){
     b+='<button class="rchip" onclick="useRoute('+i+')">'+esc(r.from)+' → '+esc(r.to)+
        '<span>　'+esc(r.km)+'km・'+yen(Math.round(Number(r.km)*S.cfg.gasRate))+'円</span></button>';
   });
-  b+='<button class="add" onclick="showForm(\'\')">'+ico('plus')+'新しい経路を入力</button>';
-  setSheet(bar,b);
+  setSheet(bar,b,'<button class="btn add" style="margin-top:0" onclick="showForm(\'\')">'+
+    ico('plus')+'<span>新しい経路を入力</span></button>');
 }
 function useRoute(i){
   var r=S.routes[i];
@@ -857,11 +914,12 @@ function showForm(hint){
   b+='<label class="fl">メモ（任意）</label>'+
      '<input type="text" id="fMemo" value="'+esc(d.memo)+'" placeholder="店名・内容など">';
   b+='<div class="msg err" id="fMsg" aria-live="polite"></div>';
-  b+='<button class="save" id="saveBtn" onclick="saveDraft(false)">'+
-     (fromQ?'この内容にする':(edit?'この内容に修正する':'保存する'))+'</button>';
   b+='<div id="dupBox"></div>';
-  if(edit) b+='<button class="del" onclick="delItem()">'+ico('trash')+' 削除する</button>';
-  setSheet(bar,b);
+
+  var foot='<button class="btn save" id="saveBtn" onclick="saveDraft(false)"><span>'+
+     (fromQ?'この内容にする':(edit?'この内容に修正する':'保存する'))+'</span></button>';
+  if(edit) foot+='<button class="btn del" onclick="delItem()">'+ico('trash')+'<span>削除する</span></button>';
+  setSheet(bar,b,foot);
   if(isGas) calcGas();
 }
 function pullForm(){
@@ -901,8 +959,9 @@ function saveDraft(confirmed){
   var payload={ date:d.date, clinic:d.clinic, category:d.category, amount:d.amount,
     km:d.km, from:d.from, to:d.to, trip:d.trip, memo:d.memo,
     imageBase64:d.image, aiAmount:d.aiAmount, confirmed:!!confirmed };
+  if(!d.reqId) d.reqId = newReqId();
   var call = d.id ? api('apiUpdate',{idToken:S.idToken,id:d.id,payload:payload})
-                  : api('apiSubmit',{idToken:S.idToken,payload:payload});
+                  : api('apiSubmit',{idToken:S.idToken,reqId:d.reqId,payload:payload});
   call.then(function(r){
     if(r.ok){
       if(r.items){ S.items=r.items; }
@@ -927,7 +986,7 @@ function saveDraft(confirmed){
     btn.disabled=false; btn.textContent=d.id?'この内容に修正する':'保存する';
     m.textContent=r.error;
     if(r.duplicate) document.getElementById('dupBox').innerHTML=
-      '<button class="del" onclick="saveDraft(true)">それでも登録する</button>';
+      '<button class="btn del" onclick="saveDraft(true)"><span>それでも登録する</span></button>';
   }).catch(function(){
     btn.disabled=false; btn.textContent=d.id?'この内容に修正する':'保存する';
     m.textContent='通信に失敗しました。もう一度お試しください。';
@@ -967,9 +1026,9 @@ function openSettings(){
   S.cfg.clinics.forEach(function(c){
     b+='<option value="'+esc(c)+'" '+(S.defClinic===c?'selected':'')+'>'+esc(c)+'</option>'; });
   b+='</select><div class="msg ok" id="sMsg" aria-live="polite"></div>'+
-     '<button class="save" onclick="saveSettings()">保存する</button>'+
      '<p class="note">氏名：'+esc(S.emp.name)+'　従業員ID：'+esc(S.emp.id)+'</p>';
-  setSheet(bar,b); openSheet();
+  setSheet(bar,b,'<button class="btn save" onclick="saveSettings()"><span>保存する</span></button>');
+  openSheet();
 }
 function saveSettings(){
   var c=document.getElementById('sClinic').value;
