@@ -44,11 +44,12 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
       position:relative;min-height:50px}
 .cell.blank{background:transparent}
 .cell:not(.blank):active{background:#e6e9eb}
-.cell .d{font-size:15px;font-weight:600;line-height:1.15}
+.cell .d{font-size:15px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums}
 .cell.sun .d{color:var(--sun)} .cell.sat .d{color:var(--sat)}
 .cell.today{border-color:var(--green)} .cell.today .d{color:var(--green)}
-.cell .amt{font-size:10px;color:var(--sub);margin-top:auto;line-height:1.15;
-           white-space:nowrap;overflow:hidden;max-width:100%}
+.cell .amt{font-size:10px;color:var(--sub);margin-top:auto;line-height:1.2;
+           white-space:nowrap;overflow:hidden;max-width:100%;
+           font-variant-numeric:tabular-nums;text-align:center}
 .cell.future{opacity:.4}
 
 /* 下部バー */
@@ -56,11 +57,11 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
       padding:9px 14px calc(9px + env(safe-area-inset-bottom))}
 .tot{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px}
 .tot .lbl{font-size:12px;color:var(--sub)}
-.tot .v{font-size:22px;font-weight:700}
+.tot .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
 .tot .cn{font-size:12px;color:var(--sub);margin-left:5px}
 .shoot{width:100%;min-height:56px;border:none;border-radius:14px;background:var(--green);
        color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;
-       justify-content:center;gap:9px}
+       justify-content:center;gap:9px;line-height:1}
 .shoot:active{background:#05b34c}
 .shoot svg.i{width:24px;height:24px;stroke-width:1.9}
 
@@ -74,38 +75,66 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
 .sheet.on{transform:translateY(0)}
 .sheet .bar{padding:11px 14px 9px;border-bottom:1px solid var(--line);flex:0 0 auto;
             display:flex;align-items:center;gap:8px}
-.sheet .bar h3{margin:0;font-size:17px;flex:1 1 auto}
-.sheet .bar .rt{font-size:16px;font-weight:700}
+.sheet .bar h3{margin:0;font-size:17px;flex:1 1 auto;line-height:1.3;
+               overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet .bar .rt{font-size:16px;font-weight:700;flex:0 0 auto;
+                font-variant-numeric:tabular-nums;line-height:1.3}
 .sheet .body{overflow-y:auto;overflow-x:hidden;padding:12px 14px calc(16px + env(safe-area-inset-bottom));
             flex:1 1 auto;overscroll-behavior:contain;width:100%}
 .x,.back{min-width:44px;min-height:40px;border:none;background:none;color:var(--sub);
          display:flex;align-items:center;justify-content:center}
 
 /* 明細行 */
-.item{display:flex;align-items:center;gap:10px;padding:12px 2px;border-bottom:1px solid var(--line);
-      min-height:56px}
+.item{display:flex;align-items:center;gap:10px;padding:12px 12px;border-bottom:1px solid var(--line);
+      min-height:60px}
 .item:active{background:var(--soft)}
 .item .ic{width:36px;height:36px;border-radius:10px;background:var(--soft);flex:0 0 auto;
           display:flex;align-items:center;justify-content:center;color:var(--sub)}
 .item .tx{flex:1 1 auto;min-width:0}
-.item .t1{font-size:15px;font-weight:600}
-.item .t2{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.item .yen{font-size:16px;font-weight:700;flex:0 0 auto}
+.item .t1{font-size:15px;font-weight:600;line-height:1.3}
+.item .t2{font-size:12px;color:var(--sub);line-height:1.35;margin-top:1px;
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .yen{font-size:16px;font-weight:700;flex:0 0 auto;font-variant-numeric:tabular-nums;line-height:1.2}
 .empty{text-align:center;color:var(--sub);font-size:14px;padding:20px 0}
 
 /* 確認カード（撮影後） */
-.card{border:1px solid var(--line);border-radius:14px;padding:12px 13px;margin-bottom:10px}
+.card{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;
+      max-width:100%;overflow:hidden}
 .card.done{border-color:var(--green);background:#f4fcf7}
-.card{max-width:100%;overflow:hidden}
-.card .top{display:flex;align-items:center;gap:9px;margin-bottom:6px}
-.card .cat{font-weight:700;font-size:16px;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.card .amt2{font-size:20px;font-weight:700}
-.card .sub{font-size:13px;color:var(--sub);margin-bottom:9px}
-.card .row2{display:flex;gap:8px}
+.card.dup{border-color:#f0c3bf;background:#fdf6f5}
+.card .top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.card .tx{flex:1 1 auto;min-width:0}
+.card .cat{font-weight:700;font-size:16px;line-height:1.3;
+           overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .sub{font-size:12px;color:var(--sub);line-height:1.35;margin:2px 0 0;
+           overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .amt2{font-size:20px;font-weight:700;flex:0 0 auto;line-height:1.2;
+            font-variant-numeric:tabular-nums}
+.card .row2{display:flex;gap:8px;align-items:stretch}
 .card .ok{flex:1 1 auto;min-height:46px;border:none;border-radius:11px;background:var(--green);
-          color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
-.card .fix{min-height:46px;padding:0 16px;border:1px solid var(--line);border-radius:11px;background:#fff}
+          color:#fff;font-weight:700;display:inline-flex;align-items:center;justify-content:center;
+          gap:6px;line-height:1;padding:0}
+.card .ok svg.i{width:19px;height:19px;stroke-width:2.2}
+.card .ok:disabled{background:#dfe4e6;color:#98a1a6}
+.card .fix{min-height:46px;padding:0 16px;border:1px solid var(--line);border-radius:11px;
+           background:#fff;display:inline-flex;align-items:center;justify-content:center;line-height:1}
+.card .fix.del2{padding:0 13px;color:var(--red);border-color:#f0c3bf}
 .card.done .ok{background:#d8f2e2;color:#04913f}
+.alert{font-size:13px;line-height:1.45;color:var(--red);background:#fdf1f0;border-radius:9px;
+       padding:8px 10px;margin-bottom:9px;word-break:break-word;overflow-wrap:anywhere}
+.selall{display:flex;width:100%;min-height:46px;border:1px solid var(--line);border-radius:11px;
+        background:#fff;align-items:center;justify-content:center;gap:7px;font-size:15px;
+        font-weight:600;margin-bottom:12px;line-height:1}
+.selall.on{border-color:var(--green);background:#eafaf1;color:#04913f}
+.selall svg.i{width:19px;height:19px;stroke-width:2.1}
+
+/* スワイプで削除 */
+.swipe{position:relative;overflow:hidden;background:var(--red)}
+.swipe .trash{position:absolute;top:0;right:0;bottom:0;width:76px;border:none;background:var(--red);
+              color:#fff;display:flex;align-items:center;justify-content:center;padding:0}
+.swipe .trash svg.i{width:22px;height:22px;stroke-width:2}
+.swipe .item{position:relative;background:#fff;will-change:transform}
+
 .thumb{width:56px;height:56px;object-fit:cover;border-radius:9px;border:1px solid var(--line);flex:0 0 auto}
 .prog{font-size:13px;color:var(--sub);text-align:center;padding:10px 0}
 .shots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
@@ -120,11 +149,13 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
 /* 入力パーツ */
 .add{width:100%;min-height:50px;border:1px dashed var(--green);border-radius:12px;background:#f2fbf5;
      color:var(--green);font-weight:700;font-size:15px;margin-top:12px;
-     display:flex;align-items:center;justify-content:center;gap:7px}
+     display:flex;align-items:center;justify-content:center;gap:7px;line-height:1}
 .big{width:100%;min-height:56px;border:1px solid var(--line);border-radius:12px;background:#fff;
-     display:flex;align-items:center;gap:12px;padding:0 14px;margin-bottom:8px;text-align:left;font-size:16px}
+     display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:8px;
+     text-align:left;font-size:16px;line-height:1.35}
+.big > span{flex:1 1 auto;min-width:0}
 .big:active{background:var(--soft)}
-.big .s{display:block;font-size:12px;color:var(--sub);font-weight:400}
+.big .s{display:block;font-size:12px;color:var(--sub);font-weight:400;line-height:1.35;margin-top:2px}
 label.fl{display:block;font-size:12px;color:var(--sub);margin:13px 0 5px}
 input[type=text],input[type=number],input[type=date]{width:100%;padding:12px;font-size:17px;
   border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-family:inherit}
@@ -154,6 +185,12 @@ select{width:100%;padding:12px;font-size:17px;border:1px solid var(--line);borde
 .spin{width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--green);
       border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 12px}
 @keyframes sp{to{transform:rotate(360deg)}}
+#toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));
+       transform:translate(-50%,14px);background:rgba(30,34,37,.94);color:#fff;
+       padding:11px 18px;border-radius:999px;font-size:14px;z-index:40;
+       opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+       max-width:90%;text-align:center;line-height:1.4}
+#toast.on{opacity:1;transform:translate(-50%,0)}
 </style>
 </head>
 <body>
@@ -422,6 +459,15 @@ function setSheet(bar,body){
   document.getElementById('sheetBody').innerHTML=body;
   document.getElementById('sheetBody').scrollTop=0;
 }
+/* 画面下に短く出る通知 */
+function toast(msg){
+  var el=document.getElementById('toast');
+  if(!el){ el=document.createElement('div'); el.id='toast'; document.body.appendChild(el); }
+  el.textContent=msg; el.className='on';
+  clearTimeout(window.__tt);
+  window.__tt=setTimeout(function(){ el.className=''; },2200);
+}
+
 function closeBtn(){ return '<button class="x" onclick="closeSheet()">'+ico('close')+'</button>'; }
 function backBtn(fn){ return '<button class="back" onclick="'+fn+'">'+ico('left')+'</button>'; }
 
@@ -437,16 +483,72 @@ function showDay(){
     var sub = x.category==='ガソリン'
       ? (x.from||'')+(x.to?' → '+x.to:'')+(x.km?'　'+x.km+'km':'')
       : (x.clinic||'')+(x.memo?'　'+x.memo:'');
-    b+='<div class="item" '+(locked?'':'onclick="editItem(\'' + x.id + '\')"')+'>'+
+    b+='<div class="swipe" data-id="'+x.id+'">'+
+       '<button class="trash" onclick="askDelete(\''+x.id+'\')" aria-label="削除">'+ico('trash')+'</button>'+
+       '<div class="item" '+(locked?'':'onclick="editItem(\''+x.id+'\')"')+'>'+
        '<div class="ic">'+ico(catIcon(x.category))+'</div>'+
        '<div class="tx"><div class="t1">'+esc(x.category)+'</div>'+
        '<div class="t2">'+esc(sub)+'</div></div>'+
-       '<div class="yen">'+yen(x.amount)+'</div></div>';
+       '<div class="yen">'+yen(x.amount)+'</div></div></div>';
   });
   if (locked) b+='<p class="note">締め切り済みの期間は修正できません。</p>';
   else if (d > S.today) b+='<p class="note">未来の日付には登録できません。</p>';
   else b+='<button class="add" onclick="chooseType()">'+ico('plus')+'経費を追加</button>';
   setSheet(bar,b);
+  if(!locked) bindSwipeRows();
+}
+
+/* 明細を左にスライドすると削除ボタンが出る */
+function bindSwipeRows(){
+  var rows = document.querySelectorAll('#sheetBody .swipe');
+  var W = 76;                                  // 削除ボタンの幅
+  Array.prototype.forEach.call(rows, function(row){
+    var item = row.querySelector('.item');
+    var x0=0, y0=0, dx=0, open=false, drag=false, decided=false;
+    function set(px, anim){
+      item.style.transition = anim ? 'transform .18s ease-out' : 'none';
+      item.style.transform = 'translateX(' + px + 'px)';
+    }
+    row.addEventListener('touchstart', function(e){
+      if(e.touches.length!==1) return;
+      x0=e.touches[0].clientX; y0=e.touches[0].clientY;
+      dx=0; drag=true; decided=false;
+    },{passive:true});
+    row.addEventListener('touchmove', function(e){
+      if(!drag) return;
+      var mx=e.touches[0].clientX-x0, my=e.touches[0].clientY-y0;
+      if(!decided){
+        if(Math.abs(mx)<6 && Math.abs(my)<6) return;
+        decided=true;
+        if(Math.abs(my)>Math.abs(mx)){ drag=false; return; }
+      }
+      if(e.cancelable) e.preventDefault();
+      var base = open ? -W : 0;
+      dx = Math.min(0, Math.max(-W-20, base+mx));
+      set(dx,false);
+    },{passive:false});
+    row.addEventListener('touchend', function(){
+      if(!drag) return; drag=false;
+      open = dx < -W/2;
+      set(open ? -W : 0, true);
+      // 他の行は閉じる
+      Array.prototype.forEach.call(rows, function(o){
+        if(o!==row){ var i2=o.querySelector('.item');
+          i2.style.transition='transform .18s'; i2.style.transform='translateX(0)'; }
+      });
+    },{passive:true});
+  });
+}
+
+function askDelete(id){
+  var x=null; S.items.forEach(function(i){ if(i.id===id) x=i; });
+  if(!x) return;
+  if(!confirm(md(x.date)+'の「'+x.category+' '+yen(x.amount)+'円」を削除しますか？')) return;
+  api('apiDelete',{idToken:S.idToken,id:id}).then(function(r){
+    if(!r.ok){ alert(r.error); return; }
+    S.items=r.items||S.items; S.cache[S.period]=S.items;
+    renderCal(); showDay(); toast('削除しました');
+  }).catch(function(){ alert('通信に失敗しました。'); });
 }
 
 /* --- 追加方法 --- */
@@ -553,35 +655,71 @@ function readShots(){
 }
 
 
-function showQueue(){
-  var bar='<h3>内容の確認</h3><span class="rt">'+S.queue.length+'件</span>'+closeBtn();
-  var b='';
-  S.queue.forEach(function(q,idx){
-    var need = !(parseInt(q.amount,10)>0);
-    b+='<div class="card '+(q.ok?'done':'')+'">'+
-       '<div class="top">'+
-         (q.image?'<img class="thumb" src="data:image/jpeg;base64,'+q.image+'">':'')+
-         '<div style="flex:1 1 auto;min-width:0">'+
-           '<div class="cat">'+esc(q.category)+'</div>'+
-           '<div class="sub">'+md(q.date)+'（'+wdName(q.date)+'）　'+esc(q.clinic)+'</div>'+
-         '</div>'+
-         '<div class="amt2">'+(need?'—':yen(q.amount))+'</div>'+
-       '</div>'+
-       (q.err?'<div class="msg err">'+esc(q.err)+'</div>':'')+
-       (need&&!q.err?'<div class="msg err">金額が読めませんでした。「直す」から入力してください。</div>':'')+
-       '<div class="row2">'+
-         '<button class="ok" onclick="toggleOk('+idx+')" '+(need?'disabled':'')+'>'+
-           ico('check')+(q.ok?'確認済み':'OK')+'</button>'+
-         '<button class="fix" onclick="fixQueue('+idx+')">直す</button>'+
-       '</div></div>';
+function markDuplicates(){
+  var seen = {};
+  S.items.forEach(function(x){ seen[x.date+'|'+x.category+'|'+x.amount] = '登録済み'; });
+  S.queue.forEach(function(q){
+    var k = q.date+'|'+q.category+'|'+q.amount;
+    if (!(parseInt(q.amount,10) > 0)) { q.dup=''; return; }
+    q.dup = seen[k] || '';
+    if (!q.dup) seen[k] = 'この中で重複';
+    else if (q.ok) q.ok = false;      // 重複なら確認済みを外す
   });
-  var okCount = S.queue.filter(function(q){return q.ok;}).length;
-  b+='<div class="stick"><button class="save" id="batchBtn" onclick="saveQueue()" '+
-     (okCount?'':'disabled')+'>'+okCount+'件を保存する</button>'+
-     '<button class="del" onclick="closeSheet()">やめる</button></div>';
+}
+
+function showQueue(){
+  markDuplicates();
+  var okCount = 0, canCount = 0;
+  S.queue.forEach(function(q){
+    if (q.ok) okCount++;
+    if (parseInt(q.amount,10) > 0 && !q.dup) canCount++;
+  });
+
+  var bar = '<h3>内容の確認</h3><span class="rt">'+S.queue.length+'件</span>'+closeBtn();
+  var b = '';
+
+  if (canCount > 1) {
+    var allOn = (okCount === canCount);
+    b += '<button class="selall'+(allOn?' on':'')+'" onclick="toggleAll()">'+
+         ico(allOn?'check':'plus')+(allOn?'すべて解除':'すべて選ぶ')+'</button>';
+  }
+
+  S.queue.forEach(function(q,idx){
+    var need = !(parseInt(q.amount,10) > 0);
+    var block = need || !!q.dup;
+    b += '<div class="card '+(q.ok?'done':'')+(q.dup?' dup':'')+'">'+
+         '<div class="top">'+
+           (q.image?'<img class="thumb" src="data:image/jpeg;base64,'+q.image+'">':'<div class="thumb noimg">'+ico('doc')+'</div>')+
+           '<div class="tx">'+
+             '<div class="cat">'+esc(q.category)+'</div>'+
+             '<div class="sub">'+md(q.date)+'（'+wdName(q.date)+'）　'+esc(q.clinic)+'</div>'+
+           '</div>'+
+           '<div class="amt2">'+(need?'—':yen(q.amount))+'</div>'+
+         '</div>'+
+         (q.err ? '<div class="alert">'+esc(q.err)+'</div>' : '')+
+         (q.dup ? '<div class="alert">同じ内容が既にあります（'+esc(q.dup)+'）。登録しません。</div>' : '')+
+         (need && !q.err ? '<div class="alert">金額が読めませんでした。「直す」から入力してください。</div>' : '')+
+         '<div class="row2">'+
+           '<button class="ok" onclick="toggleOk('+idx+')" '+(block?'disabled':'')+'>'+
+             ico('check')+'<span>'+(q.ok?'確認済み':'OK')+'</span></button>'+
+           '<button class="fix" onclick="fixQueue('+idx+')">直す</button>'+
+           '<button class="fix del2" onclick="dropQueue('+idx+')">'+ico('trash')+'</button>'+
+         '</div></div>';
+  });
+
+  b += '<div class="stick"><button class="save" id="batchBtn" onclick="saveQueue()" '+
+       (okCount?'':'disabled')+'>'+(okCount? okCount+'件を保存する' : '保存する')+'</button>'+
+       '<button class="del" onclick="closeSheet()">やめる</button></div>';
   setSheet(bar,b);
 }
 function toggleOk(i){ S.queue[i].ok = !S.queue[i].ok; showQueue(); }
+function toggleAll(){
+  var can = S.queue.filter(function(q){ return parseInt(q.amount,10)>0 && !q.dup; });
+  var allOn = can.length && can.every(function(q){ return q.ok; });
+  can.forEach(function(q){ q.ok = !allOn; });
+  showQueue();
+}
+function dropQueue(i){ S.queue.splice(i,1); if(!S.queue.length){ closeSheet(); return; } showQueue(); }
 function fixQueue(i){
   S.draft = JSON.parse(JSON.stringify(S.queue[i]));
   S.draft.qi = i; S.draft.id='';
@@ -600,6 +738,7 @@ function saveQueue(){
     if(!r.ok){ btn.disabled=false; btn.textContent='保存する'; alert(r.error); return; }
     S.queue=[]; S.items=r.items||S.items; S.cache[S.period]=S.items;
     S.view=S.period; renderCal(); closeSheet();
+    toast(r.saved + '件を登録しました' + (r.skipped ? '（重複など' + r.skipped + '件は除外）' : ''));
   }).catch(function(){ btn.disabled=false; btn.textContent='保存する';
     alert('通信に失敗しました。'); });
 }
@@ -772,7 +911,7 @@ function saveDraft(confirmed){
     m.textContent='通信に失敗しました。もう一度お試しください。';
   });
 }
-function afterSave(){ S.day=S.draft?S.draft.date:S.day; S.draft=null; renderCal(); showDay(); }
+function afterSave(){ S.day=S.draft?S.draft.date:S.day; S.draft=null; renderCal(); showDay(); toast('保存しました'); }
 
 function editItem(id){
   var x=null; S.items.forEach(function(i){ if(i.id===id) x=i; });
