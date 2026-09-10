@@ -92,7 +92,9 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
       min-height:60px}
 .item:active{background:var(--soft)}
 .item .ic{width:36px;height:36px;border-radius:10px;background:var(--soft);flex:0 0 auto;
-          display:flex;align-items:center;justify-content:center;color:var(--sub)}
+          display:flex;align-items:center;justify-content:center;color:var(--sub);padding:0;border:none}
+.item .shot-ic{background:#e8f5ec;color:#04913f;border:1px solid #cdebd8}
+.item .shot-ic:active{background:#d8f0e2}
 .item .tx{flex:1 1 auto;min-width:0}
 .item .t1{font-size:15px;font-weight:600;line-height:1.3}
 .item .t2{font-size:12px;color:var(--sub);line-height:1.35;margin-top:1px;
@@ -240,6 +242,7 @@ var S = {
 
 /* ---------- アイコン（iOS風の線画・自前SVG） ---------- */
 var IC = {
+  photo:'<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="8.6" cy="10" r="1.6"/><path d="M4 16.5l4.4-4a1.6 1.6 0 0 1 2.2 0l3 2.8a1.6 1.6 0 0 0 2.2 0l1.6-1.5 3 2.9"/>',
   camera:'<path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.7l1-1.7a1 1 0 0 1 .9-.5h5.8a1 1 0 0 1 .9.5l1 1.7h1.7A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><circle cx="12" cy="12.5" r="3.4"/>',
   car:'<path d="M5 16.5h14M6.2 12l1.3-3.7A2 2 0 0 1 9.4 7h5.2a2 2 0 0 1 1.9 1.3L17.8 12"/><rect x="3.5" y="12" width="17" height="4.5" rx="1.6"/><path d="M6.5 16.5v1.8M17.5 16.5v1.8"/>',
   road:'<path d="M8.5 4 6 20M15.5 4 18 20M12 5v2.5M12 11v2.5M12 17v2.5"/>',
@@ -599,10 +602,14 @@ function showDay(){
     var sub = x.category==='ガソリン'
       ? (x.from||'')+(x.to?' → '+x.to:'')+(x.km?'　'+x.km+'km':'')
       : (x.clinic||'')+(x.memo?'　'+x.memo:'');
+    var hasImg = !!x.image;
     b+='<div class="swipe" data-id="'+x.id+'">'+
        '<button class="trash" onclick="askDelete(\''+x.id+'\')" aria-label="削除">'+ico('trash')+'</button>'+
        '<div class="item" '+(locked?'':'onclick="editItem(\''+x.id+'\')"')+'>'+
-       '<div class="ic">'+ico(catIcon(x.category))+'</div>'+
+       (hasImg
+         ? '<button class="ic shot-ic" onclick="event.stopPropagation();openReceipt(\''+x.id+'\')" '+
+           'aria-label="領収書を見る">'+ico('photo')+'</button>'
+         : '<div class="ic">'+ico(catIcon(x.category))+'</div>')+
        '<div class="tx"><div class="t1">'+esc(x.category)+'</div>'+
        '<div class="t2">'+esc(sub)+'</div></div>'+
        '<div class="yen">'+yen(x.amount)+'<span class="cur">円</span></div></div></div>';
@@ -656,6 +663,19 @@ function bindSwipeRows(){
       });
     },{passive:true});
   });
+}
+
+/** 領収書の画像を開く。Driveの画像はアプリ内で開くと崩れるため、外部ブラウザに任せる */
+function openReceipt(id){
+  var x=null; S.items.forEach(function(i){ if(i.id===id) x=i; });
+  if(!x || !x.image){ toast('この経費には領収書の画像がありません'); return; }
+  try{
+    if (typeof liff !== 'undefined' && liff.openWindow) {
+      liff.openWindow({ url:x.image, external:true });
+      return;
+    }
+  }catch(e){}
+  window.open(x.image, '_blank');
 }
 
 function askDelete(id){
@@ -744,39 +764,89 @@ function onLib(ev){
   })();
 }
 
-/** 溜めた写真をまとめてAIに送る（1回の通信で全枚数を処理する） */
-function readShots(){
-  var shots=S.shots.slice(); if(!shots.length) return;
-  S.queue=[];
-  setSheet('<h3>読み取り中</h3>'+closeBtn(),
-    '<div class="center"><div class="spin"></div>'+shots.length+'枚を読み取っています…'+
-    '<p class="note">20〜40秒ほどかかります</p></div>');
+/**
+ * 溜めた写真をAIに送る。
+ * 一度に大量に送ると通信が失敗する（HTTP 404など）ため、数枚ずつに分けて送る。
+ */
+var READ_CHUNK = 3;
 
-  api('apiReadReceipts',{idToken:S.idToken, images:shots}, 180000).then(function(r){
-    var res = (r && r.ok && r.results) ? r.results : [];
-    shots.forEach(function(b64, i){
-      var rc = (res[i] && res[i].length) ? res[i] : [null];
-      rc.forEach(function(a){
-        S.queue.push({
-          date:(a&&a.date&&a.date<=S.today)?a.date:(S.day||S.today),
-          clinic:S.defClinic||(S.emp.clinic||''),
-          category:(a&&a.kind)?a.kind:'その他',
-          amount:(a&&a.amount)?a.amount:'',
-          aiAmount:(a&&a.amount)?a.amount:'',
-          memo:(a&&a.store)?a.store:'',
-          image:b64, hash:imgHash(b64), km:'', from:'', to:'', trip:'', ok:false,
-          conf:(a && a.confidence) ? a.confidence : 'low',
-          err:(!a && r && r.note)?r.note:''
-        });
-      });
+function readShots(){
+  var shots = S.shots.slice();
+  if (!shots.length) return;
+  S.queue = [];
+
+  var groups = [];
+  for (var i = 0; i < shots.length; i += READ_CHUNK) groups.push(shots.slice(i, i + READ_CHUNK));
+
+  var gi = 0, doneImg = 0, failed = 0;
+  function progress(){
+    var el = document.getElementById('prog');
+    if (el) el.textContent = doneImg + ' / ' + shots.length + ' 枚を読み取りました';
+  }
+  setSheet('<h3>読み取り中</h3>'+closeBtn(),
+    '<div class="center"><div class="spin"></div><span id="prog">0 / '+shots.length+' 枚を読み取りました</span>'+
+    '<p class="note">1枚あたり10〜20秒かかります</p></div>');
+
+  function push(b64, a, note){
+    S.queue.push({
+      date:(a&&a.date&&a.date<=S.today)?a.date:(S.day||S.today),
+      clinic:S.defClinic||(S.emp.clinic||''),
+      category:(a&&a.kind)?a.kind:'その他',
+      amount:(a&&a.amount)?a.amount:'',
+      aiAmount:(a&&a.amount)?a.amount:'',
+      memo:(a&&a.store)?a.store:'',
+      image:b64, hash:imgHash(b64), km:'', from:'', to:'', trip:'', ok:false,
+      conf:(a&&a.confidence)?a.confidence:'low',
+      err:(!a && note)?note:''
     });
-    S.shots=[]; showQueue();
-  }).catch(function(e){
-    S.shots=shots;
-    setSheet('<h3>読み取りに失敗</h3>'+closeBtn(),
-      '<div class="alert">'+esc(e&&e.message?e.message:e)+'</div>'+
-      '', '<button class="btn save" onclick="readShots()"><span>もう一度読み取る</span></button>'+
-      '<button class="btn del" onclick="showShots()"><span>写真の画面に戻る</span></button>');
+  }
+
+  function next(){
+    if (gi >= groups.length){
+      S.shots = [];
+      checkDupOnServer(function(){ showQueue(); });
+      return;
+    }
+    var g = groups[gi];
+    api('apiReadReceipts',{idToken:S.idToken, images:g}, 180000).then(function(r){
+      var res = (r && r.ok && r.results) ? r.results : [];
+      g.forEach(function(b64, k){
+        var rc = (res[k] && res[k].length) ? res[k] : [null];
+        rc.forEach(function(a){ push(b64, a, (r && r.note) || ''); });
+      });
+    }).catch(function(e){
+      failed += g.length;
+      g.forEach(function(b64){ push(b64, null, '読み取りに失敗しました（'+(e&&e.message?e.message:e)+'）'); });
+    }).then(function(){
+      doneImg += g.length; progress(); gi++; next();
+    });
+  }
+  next();
+}
+
+/**
+ * 重複しているかをサーバーに問い合わせる。
+ * 画面は現在の期間しか持っていないため、判定は必ずサーバー側で行う。
+ */
+function checkDupOnServer(done){
+  if (!S.queue.length) { done(); return; }
+  var items = S.queue.map(function(q){
+    return { hash:q.hash||'', date:q.date, category:q.category,
+             amount:parseInt(q.amount,10)||0, store:q.memo||'' };
+  });
+  api('apiCheckDup',{idToken:S.idToken, items:items}, 60000).then(function(r){
+    var res = (r && r.ok && r.results) ? r.results : [];
+    S.queue.forEach(function(q, i){
+      var d = res[i] || {};
+      q.dup     = d.dup ? (d.dup + (d.note || '')) : '';
+      q.dupHard = !!d.hard;
+      if (q.dupHard && q.ok) q.ok = false;
+    });
+    markInQueue();      // 同じ回の中での重なりも見る
+    done();
+  }).catch(function(){
+    markInQueue();      // 問い合わせに失敗しても、その場の判定だけは行う
+    done();
   });
 }
 
@@ -786,52 +856,35 @@ function normStore(s){
     .replace(/[（）()株式会社有限会社店支店営業所]/g,'').toLowerCase().slice(0,8);
 }
 
-/**
- * 重複の候補を見つける。
- * ・同じ写真 → 確実な重複として登録を止める
- * ・同じ日・同じ種類で「金額がほぼ同じ」または「店名が一致」→ 警告のみ（本人が判断）
- * AIの読み取りは毎回わずかに揺れるため、金額の完全一致だけでは取りこぼす。
- */
-function markDuplicates(){
-  var seenImg = {}, past = [];
-  S.items.forEach(function(x){
-    if (x.hash) seenImg[x.hash] = true;
-    past.push({ date:x.date, category:x.category, amount:Number(x.amount)||0,
-                store:normStore(x.memo), where:'登録済み' });
-  });
-
+/** 同じ回に読み取った中での重なりを見る（サーバーの判定に上乗せする） */
+function markInQueue(){
+  var seen = [];
   S.queue.forEach(function(q){
-    q.dup = ''; q.dupHard = false;
-
-    // 同じ写真は確実な重複
-    if (q.hash && seenImg[q.hash]) {
-      q.dup = '同じ写真が既に登録されています'; q.dupHard = true;
-      if (q.ok) q.ok = false;
-      return;
-    }
-
     var amt = parseInt(q.amount,10);
-    if (!(amt > 0)) return;
+    if (!(amt > 0)) { seen.push(null); return; }
     var st = normStore(q.memo);
-
-    for (var i = 0; i < past.length; i++) {
-      var x = past[i];
-      if (x.date !== q.date || x.category !== q.category) continue;
-      var near = Math.abs(x.amount - amt) <= 2;
-      var same = st && x.store && st === x.store;
-      if (near || same) {
-        q.dup = (x.where === '登録済み' ? '同じ日に似た内容が登録済み' : 'この中に似た内容があります') +
-                '（' + yen(x.amount) + '円' + (x.store ? '・' + x.store : '') + '）';
-        break;
+    if (!q.dup){
+      for (var i = 0; i < seen.length; i++){
+        var x = seen[i];
+        if (!x || x.date !== q.date || x.category !== q.category) continue;
+        if (Math.abs(x.amount - amt) <= 2 || (st && x.store && st === x.store)){
+          q.dup = 'この中に似た内容があります（' + yen(x.amount) + '円' +
+                  (x.store ? '・' + x.store : '') + '）';
+          break;
+        }
       }
     }
-    // 自分自身も以降の突き合わせ対象に加える
-    past.push({ date:q.date, category:q.category, amount:amt, store:st, where:'この中' });
+    seen.push({ date:q.date, category:q.category, amount:amt, store:st });
   });
 }
 
+/** 内容を直したら、判定をやり直す */
+function recheckDup(){
+  S.queue.forEach(function(q){ q.dup=''; q.dupHard=false; });
+  checkDupOnServer(function(){ S.keepScroll = true; showQueue(); });
+}
+
 function showQueue(){
-  markDuplicates();
   var okCount = 0, canCount = 0;
   S.queue.forEach(function(q){
     if (q.ok) okCount++;
@@ -1065,7 +1118,7 @@ function saveDraft(confirmed){
   if(d.qi>=0){
     var q=S.queue[d.qi];
     ['date','clinic','category','amount','km','from','to','trip','memo'].forEach(function(k){ q[k]=d[k]; });
-    q.ok=true; S.draft=null; showQueue(); return;
+    q.ok=true; S.draft=null; recheckDup(); return;
   }
 
   btn.disabled=true; btn.textContent='保存しています…';
