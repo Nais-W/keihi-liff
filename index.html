@@ -68,7 +68,7 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
 .mask{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;
       transition:opacity .18s;z-index:20}
 .mask.on{opacity:1;pointer-events:auto}
-.sheet{position:fixed;left:0;right:0;bottom:0;background:#fff;z-index:21;
+.sheet{position:fixed;left:0;right:0;bottom:0;background:#fff;z-index:21;overflow:hidden;max-width:100%;
        border-radius:18px 18px 0 0;transform:translateY(100%);transition:transform .22s;
        max-height:92vh;display:flex;flex-direction:column}
 .sheet.on{transform:translateY(0)}
@@ -76,7 +76,8 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
             display:flex;align-items:center;gap:8px}
 .sheet .bar h3{margin:0;font-size:17px;flex:1 1 auto}
 .sheet .bar .rt{font-size:16px;font-weight:700}
-.sheet .body{overflow-y:auto;padding:12px 14px calc(16px + env(safe-area-inset-bottom));flex:1 1 auto}
+.sheet .body{overflow-y:auto;overflow-x:hidden;padding:12px 14px calc(16px + env(safe-area-inset-bottom));
+            flex:1 1 auto;overscroll-behavior:contain;width:100%}
 .x,.back{min-width:44px;min-height:40px;border:none;background:none;color:var(--sub);
          display:flex;align-items:center;justify-content:center}
 
@@ -95,8 +96,9 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
 /* 確認カード（撮影後） */
 .card{border:1px solid var(--line);border-radius:14px;padding:12px 13px;margin-bottom:10px}
 .card.done{border-color:var(--green);background:#f4fcf7}
+.card{max-width:100%;overflow:hidden}
 .card .top{display:flex;align-items:center;gap:9px;margin-bottom:6px}
-.card .cat{font-weight:700;font-size:16px;flex:1 1 auto}
+.card .cat{font-weight:700;font-size:16px;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card .amt2{font-size:20px;font-weight:700}
 .card .sub{font-size:13px;color:var(--sub);margin-bottom:9px}
 .card .row2{display:flex;gap:8px}
@@ -112,8 +114,8 @@ svg.i{width:22px;height:22px;flex:0 0 auto;stroke:currentColor;fill:none;
 .shot .rm{position:absolute;top:3px;right:3px;width:26px;height:26px;border:none;border-radius:50%;
           background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;padding:0}
 .shot .rm svg.i{width:15px;height:15px;stroke-width:2.4}
-.stick{position:sticky;bottom:0;background:#fff;padding-top:10px;
-       box-shadow:0 -8px 12px -8px rgba(0,0,0,.12)}
+.stick{position:sticky;bottom:0;left:0;right:0;background:#fff;padding-top:10px;
+       box-shadow:0 -8px 12px -8px rgba(0,0,0,.12);max-width:100%}
 
 /* 入力パーツ */
 .add{width:100%;min-height:50px;border:1px dashed var(--green);border-radius:12px;background:#f2fbf5;
@@ -143,7 +145,7 @@ select{width:100%;padding:12px;font-size:17px;border:1px solid var(--line);borde
      color:var(--red);font-size:15px;margin-top:10px}
 .calc{background:var(--soft);border-radius:11px;padding:10px 13px;margin-top:11px;font-size:14px}
 .calc b{font-size:21px}
-.msg{font-size:14px;margin:9px 0;min-height:1.1em}
+.msg{font-size:14px;margin:9px 0;min-height:1.1em;word-break:break-word;overflow-wrap:anywhere}
 .msg.err{color:var(--red)} .msg.ok{color:var(--green)}
 .note{font-size:12px;color:var(--sub);margin:8px 0 0}
 .prev{width:100%;border-radius:11px;border:1px solid var(--line);margin:9px 0;display:block}
@@ -181,7 +183,8 @@ var S = {
   cache:{},                // 期間 → 明細
   day:'', draft:null,
   queue:[],                // 撮影して確認待ちの明細
-  shots:[]                 // 撮影済みでまだ読み取っていない画像
+  shots:[],                // 撮影済みでまだ読み取っていない画像
+  dragging:false, dirty:false   // スワイプ中の再描画を止めるための印
 };
 
 /* ---------- アイコン（iOS風の線画・自前SVG） ---------- */
@@ -262,8 +265,8 @@ function renderCal(){
        '</div></div>';
 
   h += '<div class="foot"><div class="tot"><span class="lbl">この期間の合計</span>'+
-       '<span><span class="v">'+yen(sumOf(S.items))+'</span>円'+
-       '<span class="cn">'+S.items.length+'件</span></span></div>'+
+       '<span><span class="v" id="totV">'+yen(sumOf(S.items))+'</span>円'+
+       '<span class="cn" id="totC">'+S.items.length+'件</span></span></div>'+
        (isCur ? '<button class="shoot" onclick="shoot()">'+ico('camera')+'領収書を撮る</button>' : '')+
        '</div>';
 
@@ -274,7 +277,7 @@ function renderCal(){
 /* 1か月分のグリッドを組み立てる */
 function gridHtml(p){
   var list = S.cache[p] || (p===S.view ? S.items : null);
-  var h = '<div class="page"><div class="grid">';
+  var h = '<div class="page" data-p="'+p+'"><div class="grid">';
   var ds = datesOf(p);
   for (var b=0;b<dow(ds[0]);b++) h += '<div class="cell blank"></div>';
   ds.forEach(function(d){
@@ -284,7 +287,7 @@ function gridHtml(p){
     if (dow(d)===6) cls+=' sat';
     if (d===S.today) cls+=' today';
     if (d > S.today) cls+=' future';
-    h += '<button class="'+cls+'" onclick="openDay(\'' + d + '\')">'+
+    h += '<button class="'+cls+'" data-d="'+d+'" onclick="openDay(\'' + d + '\')">'+
          '<span class="d">'+Number(d.split('-')[2])+'</span>'+
          (t?'<span class="amt">'+yen(t)+'</span>':'')+'</button>';
   });
@@ -306,7 +309,7 @@ function bindSwipe(){
   stage.addEventListener('touchstart',function(e){
     if(e.touches.length!==1) return;
     w=stage.clientWidth; x0=e.touches[0].clientX; y0=e.touches[0].clientY;
-    dx=0; dragging=true; decided=false; setX(0,false);
+    dx=0; dragging=true; decided=false; S.dragging=true; setX(0,false);
   },{passive:true});
 
   stage.addEventListener('touchmove',function(e){
@@ -324,30 +327,67 @@ function bindSwipe(){
   },{passive:false});
 
   stage.addEventListener('touchend',function(){
-    if(!dragging){ return; }
+    if(!dragging){ S.dragging=false; return; }
     dragging=false;
-    var go = Math.abs(dx) > w*0.22 ? (dx<0 ? 1 : -1) : 0;
+    var go = Math.abs(dx) > w*0.18 ? (dx<0 ? 1 : -1) : 0;
     if(go===1 && shiftPeriod(S.view,1) > S.period) go=0;
-    if(go===0){ setX(0,true); return; }
+    if(go===0){
+      S.dragging=false; setX(0,true);
+      if(S.dirty){ S.dirty=false; paintAmounts(); }
+      return;
+    }
     setX(go===1 ? -w : w, true);
-    setTimeout(function(){ goPeriod(go); }, 200);
+    // アニメーションが終わってから中身を差し替える（途中で描き直すとガタつく）
+    setTimeout(function(){ S.dragging=false; S.dirty=false; goPeriod(go); }, 230);
   },{passive:true});
 }
 function goPeriod(n){
   var next = shiftPeriod(S.view, n);
   if (next > S.period) return;                 // 未来の期間は見せない
-  loadPeriod(next).then(function(){
-    renderCal();
-    prefetch(shiftPeriod(next,-1));
-    prefetch(shiftPeriod(next,1));
-  });
+  S.view = next;
+  S.items = S.cache[next] || [];
+  renderCal();                                  // 通信を待たずに即描画
+  prefetch(next);                               // 足りないデータは後から差し込む
+  prefetch(shiftPeriod(next,-1));
+  prefetch(shiftPeriod(next,1));
 }
 /* 隣の期間を先読みしておく（スワイプ時に金額が空にならないように） */
 function prefetch(p){
   if (p > S.period || S.cache[p]) return;
   api('apiGetMyList',{idToken:S.idToken, period:p}).then(function(r){
-    if(r.ok){ S.cache[p]=r.items||[]; if(document.getElementById('track')) renderCal(); }
+    if(!r.ok) return;
+    S.cache[p]=r.items||[];
+    if(p===S.view) S.items=S.cache[p];      // 表示中の期間なら中身も入れ替える
+    // 指で操作している最中は絶対に描き直さない（カクつきの原因になるため）
+    if(S.dragging) { S.dirty=true; return; }
+    paintAmounts();
   });
+}
+
+/**
+ * 金額だけを後から差し込む。DOM全体を作り直さないので描画が軽い。
+ */
+function paintAmounts(){
+  var track=document.getElementById('track'); if(!track) return;
+  var pages=track.querySelectorAll('.page');
+  for(var i=0;i<pages.length;i++){
+    var p=pages[i].getAttribute('data-p'), list=S.cache[p];
+    if(!list) continue;
+    var byDay={};
+    list.forEach(function(x){ byDay[x.date]=(byDay[x.date]||0)+(Number(x.amount)||0); });
+    var cells=pages[i].querySelectorAll('.cell[data-d]');
+    for(var j=0;j<cells.length;j++){
+      var d=cells[j].getAttribute('data-d'), t=byDay[d]||0;
+      var el=cells[j].querySelector('.amt');
+      if(t){ if(!el){ el=document.createElement('span'); el.className='amt'; cells[j].appendChild(el); }
+             el.textContent=yen(t); }
+      else if(el){ el.remove(); }
+    }
+  }
+  var cur=S.cache[S.view]||[];
+  var tv=document.getElementById('totV'), tc=document.getElementById('totC');
+  if(tv) tv.textContent=yen(sumOf(cur));
+  if(tc) tc.textContent=cur.length+'件';
 }
 function loadPeriod(p){
   S.view = p;
