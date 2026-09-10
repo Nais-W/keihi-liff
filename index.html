@@ -544,11 +544,21 @@ function askDelete(id){
   var x=null; S.items.forEach(function(i){ if(i.id===id) x=i; });
   if(!x) return;
   if(!confirm(md(x.date)+'の「'+x.category+' '+yen(x.amount)+'円」を削除しますか？')) return;
+  // 先に画面から消して、通信は裏で待つ（体感を速くする）
+  var backup = S.items.slice();
+  S.items = S.items.filter(function(i){ return i.id!==id; });
+  S.cache[S.period]=S.items;
+  renderCal(); showDay(); toast('削除しました');
+
   api('apiDelete',{idToken:S.idToken,id:id}).then(function(r){
-    if(!r.ok){ alert(r.error); return; }
-    S.items=r.items||S.items; S.cache[S.period]=S.items;
-    renderCal(); showDay(); toast('削除しました');
-  }).catch(function(){ alert('通信に失敗しました。'); });
+    if(!r.ok){
+      S.items=backup; S.cache[S.period]=S.items;
+      renderCal(); showDay(); alert('削除できませんでした：'+r.error);
+    }
+  }).catch(function(){
+    S.items=backup; S.cache[S.period]=S.items;
+    renderCal(); showDay(); alert('通信に失敗しました。削除は取り消されました。');
+  });
 }
 
 /* --- 追加方法 --- */
@@ -617,22 +627,18 @@ function onLib(ev){
   })();
 }
 
-/** 溜めた写真をまとめてAIに送る */
+/** 溜めた写真をまとめてAIに送る（1回の通信で全枚数を処理する） */
 function readShots(){
   var shots=S.shots.slice(); if(!shots.length) return;
   S.queue=[];
   setSheet('<h3>読み取り中</h3>'+closeBtn(),
-    '<div class="center"><div class="spin"></div><span id="prog">1 / '+shots.length+
-    ' 枚目を読み取っています…</span><p class="note">1枚あたり10〜20秒かかります</p></div>');
+    '<div class="center"><div class="spin"></div>'+shots.length+'枚を読み取っています…'+
+    '<p class="note">20〜40秒ほどかかります</p></div>');
 
-  var i=0;
-  (function next(){
-    if(i>=shots.length){ S.shots=[]; showQueue(); return; }
-    var el=document.getElementById('prog');
-    if(el) el.textContent=(i+1)+' / '+shots.length+' 枚目を読み取っています…';
-    var b64=shots[i];
-    api('apiReadReceipt',{idToken:S.idToken, imageBase64:b64}).then(function(r){
-      var rc=(r&&r.ok&&r.receipts&&r.receipts.length)?r.receipts:[null];
+  api('apiReadReceipts',{idToken:S.idToken, images:shots}, 180000).then(function(r){
+    var res = (r && r.ok && r.results) ? r.results : [];
+    shots.forEach(function(b64, i){
+      var rc = (res[i] && res[i].length) ? res[i] : [null];
       rc.forEach(function(a){
         S.queue.push({
           date:(a&&a.date&&a.date<=S.today)?a.date:(S.day||S.today),
@@ -645,15 +651,16 @@ function readShots(){
           err:(!a && r && r.note)?r.note:''
         });
       });
-    }).catch(function(e){
-      S.queue.push({ date:S.day||S.today, clinic:S.defClinic||(S.emp.clinic||''),
-        category:'その他', amount:'', aiAmount:'', memo:'', image:b64,
-        km:'', from:'', to:'', trip:'', ok:false,
-        err:'通信に失敗しました' });
-    }).then(function(){ i++; next(); });
-  })();
+    });
+    S.shots=[]; showQueue();
+  }).catch(function(e){
+    S.shots=shots;
+    setSheet('<h3>読み取りに失敗</h3>'+closeBtn(),
+      '<div class="alert">'+esc(e&&e.message?e.message:e)+'</div>'+
+      '<button class="save" onclick="readShots()">もう一度読み取る</button>'+
+      '<button class="del" onclick="showShots()">写真の画面に戻る</button>');
+  });
 }
-
 
 function markDuplicates(){
   var seen = {};
@@ -898,8 +905,23 @@ function saveDraft(confirmed){
                   : api('apiSubmit',{idToken:S.idToken,payload:payload});
   call.then(function(r){
     if(r.ok){
-      if(r.items){ S.items=r.items; S.cache[S.period]=S.items; afterSave(); }
-      else reload().then(afterSave);
+      if(r.items){ S.items=r.items; }
+      else if(d.id){
+        // 修正：手元の1件だけ書き換える（全件の再取得をしない）
+        S.items=S.items.map(function(x){
+          if(x.id!==d.id) return x;
+          return { id:x.id, date:d.date, clinic:d.clinic, category:d.category,
+                   amount:(r.amount!==undefined?r.amount:d.amount), km:d.km,
+                   from:d.from, to:d.to, trip:d.trip, memo:d.memo, image:x.image };
+        });
+      } else {
+        // 新規：返ってきた分を手元に足す
+        S.items=S.items.concat([{ id:r.id||('tmp'+Date.now()), date:d.date, clinic:d.clinic,
+          category:d.category, amount:(r.amount!==undefined?r.amount:d.amount),
+          km:d.km, from:d.from, to:d.to, trip:d.trip, memo:d.memo, image:'' }]);
+      }
+      S.cache[S.period]=S.items;
+      afterSave();
       return;
     }
     btn.disabled=false; btn.textContent=d.id?'この内容に修正する':'保存する';
@@ -923,10 +945,12 @@ function editItem(id){
 }
 function delItem(){
   if(!confirm('この経費を削除しますか？')) return;
-  api('apiDelete',{idToken:S.idToken,id:S.draft.id}).then(function(r){
-    if(!r.ok){ document.getElementById('fMsg').textContent=r.error; return; }
-    S.items=r.items||S.items; S.cache[S.period]=S.items; afterSave();
-  });
+  var id=S.draft.id;
+  S.items=S.items.filter(function(i){ return i.id!==id; });
+  S.cache[S.period]=S.items; afterSave();
+  api('apiDelete',{idToken:S.idToken,id:id}).then(function(r){
+    if(!r.ok) alert('削除できませんでした：'+r.error);
+  }).catch(function(){ alert('通信に失敗しました。'); });
 }
 function reload(){
   return api('apiGetMyList',{idToken:S.idToken,period:S.period}).then(function(r){
