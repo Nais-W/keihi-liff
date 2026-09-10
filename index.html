@@ -231,7 +231,7 @@ var S = {
   day:'', draft:null,
   queue:[], reqId:'',      // 撮影して確認待ちの明細と、その送信キー
   shots:[],                // 撮影済みでまだ読み取っていない画像
-  dragging:false, dirty:false, animating:false  // スワイプ中の再描画・多重操作を防ぐ印
+  dragging:false, dirty:false, animating:false, pendingGo:0, animTimer:0, keepScroll:false
 };
 
 /* ---------- アイコン（iOS風の線画・自前SVG） ---------- */
@@ -284,6 +284,20 @@ function api(fn,args,ms,retry){
       return j;
     });
   return Promise.race([call, timeout]);
+}
+
+/**
+ * 画像から短い識別子を作る。同じ写真かどうかを確実に見分けるために使う。
+ * AIの読み取り結果は毎回わずかに揺れるため、金額や日付だけでは重複を判定できない。
+ */
+function imgHash(b64){
+  var h1 = 5381, h2 = 52711, len = b64.length;
+  for (var i = 0; i < len; i++) {
+    var c = b64.charCodeAt(i);
+    h1 = (h1 * 33 ^ c) >>> 0;
+    h2 = (h2 * 31 ^ c) >>> 0;
+  }
+  return len.toString(36) + '-' + h1.toString(36) + h2.toString(36);
 }
 
 /** 送信ごとの一意キー。通信をやり直しても二重登録されないようにする */
@@ -384,8 +398,17 @@ function bindSwipe(){
   setX(0,0);
 
   stage.addEventListener('touchstart',function(e){
-    if(S.animating) return;              // 切り替え中は受け付けない（飛ぶのを防ぐ）
     if(e.touches.length!==1) return;
+    // 切り替えの途中でも指を受け付ける。待っている切り替えを先に終わらせて、
+    // そのまま続けて掴めるようにする（止まるまで効かない、を無くす）。
+    if(S.animating){
+      clearTimeout(S.animTimer);
+      var g = S.pendingGo; S.pendingGo = 0; S.animating = false;
+      S.dragging = false; S.dirty = false;
+      if(g){ goPeriod(g); }
+      var st = document.getElementById('stage');
+      if(st && st !== stage) return;     // 貼り直されたら新しい方に任せる
+    }
     w=stage.clientWidth;
     x0=e.touches[0].clientX; y0=e.touches[0].clientY; t0=Date.now();
     dx=0; dragging=true; decided=false; S.dragging=true;
@@ -415,18 +438,18 @@ function bindSwipe(){
 
     if(go===0){
       S.dragging=false;
-      setX(0, Math.min(260, Math.max(140, Math.abs(dx))));
+      setX(0, Math.min(200, Math.max(110, Math.abs(dx))));
       if(S.dirty){ S.dirty=false; paintAmounts(); }
       return;
     }
 
     // 残りの距離に応じて時間を決めると、速さが自然につながる
     var remain = w - Math.abs(dx);
-    var ms = Math.min(300, Math.max(120, Math.round(remain / Math.max(0.5, speed))));
-    S.animating = true;
+    var ms = Math.min(220, Math.max(90, Math.round(remain / Math.max(0.8, speed))));
+    S.animating = true; S.pendingGo = go;
     setX(go===1 ? -w : w, ms);
-    setTimeout(function(){
-      S.dragging=false; S.dirty=false;
+    S.animTimer = setTimeout(function(){
+      S.dragging=false; S.dirty=false; S.pendingGo=0;
       goPeriod(go);
       S.animating=false;
     }, ms + 20);
@@ -505,10 +528,12 @@ function closeSheet(){ document.getElementById('mask').classList.remove('on');
  * シートを描く。footを渡すと画面下に固定される欄になり、
  * 本文がその下に回り込むことがなくなる。
  */
-function setSheet(bar, body, foot){
+function setSheet(bar, body, foot, keepScroll){
+  var bd = document.getElementById('sheetBody');
+  var pos = keepScroll ? bd.scrollTop : 0;
   document.getElementById('sheetBar').innerHTML = bar;
-  document.getElementById('sheetBody').innerHTML = body;
-  document.getElementById('sheetBody').scrollTop = 0;
+  bd.innerHTML = body;
+  bd.scrollTop = pos;
   var f = document.getElementById('sheetFoot');
   f.innerHTML = foot || '';
   f.style.display = foot ? 'block' : 'none';
@@ -702,7 +727,7 @@ function readShots(){
           amount:(a&&a.amount)?a.amount:'',
           aiAmount:(a&&a.amount)?a.amount:'',
           memo:(a&&a.store)?a.store:'',
-          image:b64, km:'', from:'', to:'', trip:'', ok:false,
+          image:b64, hash:imgHash(b64), km:'', from:'', to:'', trip:'', ok:false,
           err:(!a && r && r.note)?r.note:''
         });
       });
@@ -718,14 +743,20 @@ function readShots(){
 }
 
 function markDuplicates(){
-  var seen = {};
-  S.items.forEach(function(x){ seen[x.date+'|'+x.category+'|'+x.amount] = '登録済み'; });
+  var seen = {}, seenImg = {};
+  S.items.forEach(function(x){
+    seen[x.date+'|'+x.category+'|'+x.amount] = '登録済み';
+    if (x.hash) seenImg[x.hash] = '同じ写真が登録済み';
+  });
   S.queue.forEach(function(q){
     var k = q.date+'|'+q.category+'|'+q.amount;
+    // 既に登録済みの写真と同じなら、読み取り結果が多少ずれていても重複として扱う。
+    // 同じ写真から複数のレシートを取り出す場合があるので、この中での重複は見ない。
+    if (q.hash && seenImg[q.hash]) { q.dup = seenImg[q.hash]; if(q.ok) q.ok=false; return; }
     if (!(parseInt(q.amount,10) > 0)) { q.dup=''; return; }
     q.dup = seen[k] || '';
     if (!q.dup) seen[k] = 'この中で重複';
-    else if (q.ok) q.ok = false;      // 重複なら確認済みを外す
+    else if (q.ok) q.ok = false;
   });
 }
 
@@ -773,16 +804,18 @@ function showQueue(){
           (okCount?'':'disabled')+'><span>'+(okCount? okCount+'件を保存する' : '保存する')+'</span></button>'+
           '<button class="btn del" onclick="closeSheet()"><span>やめる</span></button>';
 
-  setSheet(bar, b, foot);
+  setSheet(bar, b, foot, S.keepScroll);
+  S.keepScroll = false;
 }
-function toggleOk(i){ S.queue[i].ok = !S.queue[i].ok; showQueue(); }
+function toggleOk(i){ S.keepScroll=true; S.queue[i].ok = !S.queue[i].ok; showQueue(); }
 function toggleAll(){
   var can = S.queue.filter(function(q){ return parseInt(q.amount,10)>0 && !q.dup; });
   var allOn = can.length && can.every(function(q){ return q.ok; });
   can.forEach(function(q){ q.ok = !allOn; });
-  showQueue();
+  S.keepScroll = true; showQueue();
 }
-function dropQueue(i){ S.queue.splice(i,1); if(!S.queue.length){ closeSheet(); return; } showQueue(); }
+function dropQueue(i){ S.queue.splice(i,1); if(!S.queue.length){ closeSheet(); return; }
+  S.keepScroll=true; showQueue(); }
 function fixQueue(i){
   S.draft = JSON.parse(JSON.stringify(S.queue[i]));
   S.draft.qi = i; S.draft.id='';
@@ -794,15 +827,21 @@ function saveQueue(){
   var btn=document.getElementById('batchBtn');
   btn.disabled=true; btn.textContent='保存しています…';
   if(!S.reqId) S.reqId = newReqId();
+  var imgs = list.map(function(q){ return q.image || ''; });
   api('apiSubmitBatch',{idToken:S.idToken, reqId:S.reqId, items:list.map(function(q){
     return { date:q.date, clinic:q.clinic, category:q.category, amount:q.amount,
              km:q.km, from:q.from, to:q.to, trip:q.trip, memo:q.memo,
-             imageBase64:q.image, aiAmount:q.aiAmount };
+             hash:q.hash||'', aiAmount:q.aiAmount };
   })}).then(function(r){
     if(!r.ok){ btn.disabled=false; btn.textContent='保存する'; alert(r.error); return; }
     S.reqId=''; S.queue=[]; S.items=r.items||S.items; S.cache[S.period]=S.items;
     S.view=S.period; renderCal(); closeSheet();
     toast(r.saved + '件を登録しました' + (r.skipped ? '（重複など' + r.skipped + '件は除外）' : ''));
+    // 画像は登録が終わってから裏で貼り付ける（保存を待たせない）
+    if (r.ids && r.ids.length) {
+      api('apiAttachImages',{idToken:S.idToken, ids:r.ids, images:imgs.slice(0, r.ids.length)}, 180000)
+        .catch(function(){});
+    }
   }).catch(function(){ btn.disabled=false; btn.textContent='保存する';
     alert('通信に失敗しました。'); });
 }
